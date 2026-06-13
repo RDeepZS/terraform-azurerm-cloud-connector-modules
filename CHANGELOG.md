@@ -1,3 +1,8 @@
+## v0.8.1 (June 12, 2026)
+
+BUG FIXES:
+* fix: release Function App ZIP version 1.0.3 with security changes
+
 ## v0.8.0 (July 11, 2025)
 
 FEATURES:
