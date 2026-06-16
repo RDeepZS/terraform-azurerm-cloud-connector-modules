@@ -92,6 +92,36 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
     destination_address_prefix = "*"
   }
 
+  dynamic "security_rule" {
+    for_each = var.has_public_lb ? ["1"] : []
+    content {
+  	name                       = "AllowHTTP"
+  	priority                   = 4010
+ 	direction                  = "Inbound"
+  	access                     = "Allow"
+ 	protocol                   = "Tcp"
+  	source_port_range          = "*"
+  	destination_port_range     = "80"
+  	source_address_prefix      = "*"
+  	destination_address_prefix = "*"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = var.has_public_lb ? ["1"] : []
+    content {
+  	name                       = "AllowHTTPS"
+  	priority                   = 4015
+ 	direction                  = "Inbound"
+  	access                     = "Allow"
+ 	protocol                   = "Tcp"
+  	source_port_range          = "*"
+  	destination_port_range     = "443"
+  	source_address_prefix      = "*"
+  	destination_address_prefix = "*"
+    }
+  }
+
   security_rule {
     name                       = "OUTBOUND"
     priority                   = 4000
@@ -106,6 +136,43 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
 
   tags = var.global_tags
 }
+
+################################################################################
+# Create NSG Specifically for Gateway Load Balancer (GWLB)
+################################################################################
+resource "azurerm_network_security_group" "cc_gwlb_nsg" {
+  count               = var.gwlb_enabled ? 1 : 0
+  name                = "${var.name_prefix}-gwlb-nsg-${var.resource_tag}"
+  location            = var.location
+  resource_group_name = var.resource_group
+
+  security_rule {
+    name                       = "VXLAN-Allow"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "*"                        # Allow all UDP inbound; GWLB VXLAN ports are configurable
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "OUTBOUND-Allow"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = var.global_tags
+}
+
 
 # Or use existing Service NSG
 data "azurerm_network_security_group" "service_nsg_selected" {

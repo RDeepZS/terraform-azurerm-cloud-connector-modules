@@ -22,6 +22,9 @@ ${module.network.resource_group_name}
 Load Balancer Frontend IP: 
 ${module.cc_lb.lb_ip}
 
+Public Load Balancer Frontend IP:
+${local.plb_ip}
+
 VMSS Names:
 ${join("\n", module.cc_vmss.vmss_names)}
 
@@ -58,6 +61,9 @@ Based on the recorded output, the manual sync to start your Azure Function App f
 **IMPORTANT (ONLY APPLICABLE FOR INITIAL CREATE OF FUNCTION APP)**
 
 TB
+}
+locals {
+    plb_ip = (one(module.pub_cc_lb[*].lb_ip) == null) ? "" : one(module.pub_cc_lb[*].lb_ip)
 }
 
 output "testbedconfig" {

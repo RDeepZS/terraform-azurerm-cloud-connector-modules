@@ -61,3 +61,15 @@ variable "zssupport_server" {
   description = "destination IP address of Zscaler Support access server. IP resolution of remotesupport.<zscaler_customer_cloud>.net"
   default     = "199.168.148.101" #for commercial clouds
 }
+
+variable "has_public_lb" {
+  type        = bool
+  description = "Check if any Public Load Balancer deployed or not"
+  default     = false
+}
+
+variable "gwlb_enabled" {
+  type        = bool
+  description = "Create a dedicated NSG for Gateway Load Balancer VXLAN traffic. Only set to true for GWLB deployment types"
+  default     = false
+}

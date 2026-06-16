@@ -28,6 +28,9 @@ ${join("\n", module.cc_vm.service_ip)}
 Load Balancer Frontend IP: 
 ${module.cc_lb.lb_ip}
 
+Public Load Balancer Frontend IP:
+${local.plb_ip}
+
 All NAT GW IPs:
 ${join("\n", module.network.public_ip_address)}
 
@@ -41,6 +44,10 @@ Private DNS Outbound Endpoint:
 ${try(module.private_dns.private_dns_outbound_endpoint_name, "N/A")}
 
 TB
+}
+
+locals {
+  plb_ip = (one(module.pub_cc_lb[*].lb_ip) == null) ? "" : one(module.pub_cc_lb[*].lb_ip)
 }
 
 output "testbedconfig" {
