@@ -1,34 +1,60 @@
-# Terraform state files
+# Local .terraform directories
+**/.terraform/*
+**/.terraform./*
+examples/**/.terraform/*
+examples/**/.terraform.*
+modules/**/.terraform.*
+
+# .tfstate files
 *.tfstate
 *.tfstate.*
-*.tfstate.backup
+examples/**/*.tfstate.*
 
-# Terraform variable files with real values
-*.auto.tfvars
+# Local artifacts after running terraform
+*.pem
+*.pub
+examples/.*rc*
+*zsecrc*
+**/bin/*
+user_data
+system-*.tar
+**/testbed*
+examples/ssh*
 
 # Crash log files
 crash.log
-crash.*.log
 
-# Terraform lock files (keep .terraform.lock.hcl, ignore .terraform dir)
-.terraform/
+# Ignore any .tfvars files that are generated automatically for each Terraform run. Most
+# .tfvars files are managed as part of configuration and so should be included in
+# version control.
+#
+# example.tfvars
 
-# SSH keys
-*.pem
-*.key
+# Ignore override files as they are usually used to override resources locally and so
+# are not checked in
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
-# Zscaler credentials / environment config
-.zsecrc
-.zsecrc-e
-.zsecrc-*
-examples/.zsecrc
-examples/.zsecrc-e
-examples/.zsecrc-*
+# Include override files you do wish to add to version control using negated pattern
+#
+# !example_override.tf
 
-# Generated files
-user_data
-testbed.txt
-ssh_config
+# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
+# example: *tfplan*
 
-# macOS
+# IDE stuff
+.idea/
 .DS_Store
+
+# My stuff
+.todo
+
+examples/base_cc_vmss/terraform.tfvars.sample
+modules/terraform-zscc-ccvmss-azure/zscaler_cc_function_app_*
+scripts/exitstatus
+scripts/stderr
+scripts/stdout
+scripts/support_bundle/support_bundle*
+*venv*

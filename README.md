@@ -59,6 +59,19 @@ To enable host encryption. You **must** subscribe to the feature on your azure a
 
 Use this if you are building an entire cluster from the ground up. These templates include a bastion host and test workloads and are designed for greenfield/POV testing. See [Modules](modules/) for the Terraform configurations for greenfield deployment.
 
+```
+bash
+cd examples
+Optional: Edit the terraform.tfvars file under your desired deployment type (ie: base_1cc) to setup your Cloud Connector (Details are documented inside the file)
+- ./zsec up
+- enter "1" for greenfield
+- enter <desired deployment type>
+- follow prompts for any additional configuration inputs. *keep in mind, any modifications done to terraform.tfvars first will override any inputs from the zsec script*
+- script will detect client operating system and download/run a specific version of terraform in a temporary bin directory
+- inputs will be validated and terraform init/apply will automatically exectute.
+- verify all resources that will be created/modified and enter "yes" to confirm
+```
+
 ### **Starter Deployment Template**
 
 Use the [**Starter Deployment Template**](examples/base_1cc) to deploy your Cloud Connector in a new resource group and virtual network.
@@ -83,13 +96,71 @@ Use the [**Starter Deployment Template with VMSS**](examples/base_cc_vmss) to de
 
 Use the [**Starter Deployment Template with VMSS**](examples/base_cc_vmss_zpa) to deploy your Cloud Connectors in a new resource group and virtual network to load balance traffic across multiple Cloud Connectors with Azure Private DNS Resolver capability. Zscaler's recommended deployment method is Azure Standard Load Balancer. Azure Load Balancer distributes traffic across multiple Cloud Connectors and achieves high availability. For added resiliency and elasticity, Cloud Connectors are deployed in Virtual Machine Scale Sets (VMSS) with accompanying Zscaler Function App packaged zip file.
 
+### **Starter Deployment Template with Gateway Load Balancer**
+
+Use the [**Starter Deployment Template with Gateway Load Balancer**](examples/base_cc_gwlb) to deploy your Cloud Connectors in a new resource group and virtual network with an Azure Gateway Load Balancer for transparent inline traffic inspection.
+
+### **Starter Deployment Template with Gateway Load Balancer and VMSS**
+
+Use the [**Starter Deployment Template with Gateway Load Balancer and VMSS**](examples/base_cc_gwlb_vmss) to deploy your Cloud Connectors in a new resource group and virtual network with an Azure Gateway Load Balancer and Virtual Machine Scale Sets for auto-scaling inline traffic inspection.
+
 
 ## **Brownfield Deployment**
 
 Brownfield deployment templates are most applicable for production deployments and have more customization options than a "base" deployment. They also do not include a bastion or workload hosts deployed. See [Modules](modules/) for the Terraform configurations for brownfield deployment.
+
+```
+bash
+cd examples
+Optional: Edit the terraform.tfvars file under your desired deployment type (ie: cc_lb) to setup your Cloud Connector (Details are documented inside the file)
+- ./zsec up
+- enter "2" for brownfield
+- enter <desired deployment type>
+- follow prompts for any additional configuration inputs. *keep in mind, any modifications done to terraform.tfvars first will override any inputs from the zsec script*
+- script will detect client operating system and download/run a specific version of terraform in a temporary bin directory
+- inputs will be validated and terraform init/apply will automatically exectute.
+- verify all resources that will be created/modified and enter "yes" to confirm
+```
+
+**Brownfield Deployment Types**
+
+```
+Deployment Type: (cc_lb | cc_vmss | cc_gwlb):
+```
 
 ### **Custom Deployment Template with Azure Load Balancer**
 
 Use the [**Custom Deployment template with Azure Load Balancer**](examples/cc_lb) to deploy your Cloud Connector in a new or existing VNet and load balance traffic across multiple Cloud Connectors. Zscaler's recommended deployment method is Azure Load Balancer. Azure Load Balancer distributes traffic across multiple Cloud Connectors and achieves high availability. Optional Azure Private DNS Resolver resource creation per variable zpa_enabled.
 
 Use the [**Custom Deployment template with Virtual Machine Scale Sets (VMSS)**](examples/cc_vmss) to deploy your Cloud Connectors in a new or existing VNet and load balance traffic across multiple Cloud Connectors. Zscaler's recommended deployment method is Azure Load Balancer. Azure Load Balancer distributes traffic across multiple Cloud Connectors and achieves high availability. For added resiliency and elasticity, Cloud Connectors are deployed in Virtual Machine Scale Sets (VMSS) with accompanying Zscaler Function App packaged zip file. Optional Azure Private DNS Resolver resource creation per variable zpa_enabled.
+
+Use the [**Custom Deployment template with Gateway Load Balancer**](examples/cc_gwlb) to deploy your Cloud Connectors in a new or existing VNet with an Azure Gateway Load Balancer for transparent inline traffic inspection.
+
+<br>
+
+Brownfield deployment types provide numerous customization options within terraform.tfvars to enable/disable bring-your-own resources for
+Cloud Connector deployment in existing environments. Custom paramaters include: BYO existing Resource Group, PIPs, NAT Gateways and associations,
+VNet, and subnets. Optional Azure Private DNS Resolver resource creation per variable zpa_enabled. The number of Cloud Connector VMs or Virtual Machine Scale Sets, Cloud Connector subnets, NAT Gateways, and Public IPs can vary based on if zones support is enabled and the amount of zone redundancy chosen.
+
+**3. Standalone Deployments**
+
+(These templates are most applicable for custom/specialized deployment configurations). No Cloud Connector resources are provisioned with this template as the dependency of this feature assumes the resources already exist.
+
+```
+bash
+cd examples
+Optional: Edit the terraform.tfvars file under your desired deployment type (ie: ztags_standalone) to manually set variable values (Details are documented inside the file)
+- ./zsec up
+- enter "3" for standalone ztags enablement
+- follow prompts for any additional configuration inputs. *keep in mind, any modifications done to terraform.tfvars first will override any inputs from the zsec script*
+- script will detect client operating system and download/run a specific version of terraform in a temporary bin directory
+- inputs will be validated and terraform init/apply will automatically exectute.
+- verify all resources that will be created/modified and enter "yes" to confirm
+```
+
+**Standalone Deployment Types**
+
+```
+Deployment Type: (ztags_standalone):
+**ztags_standalone** - Creates a new Resource Group (or use an existing); Event Grid System Topic; and PartnerDestination Event Subscription for Zscaler Tag Discovery Service automation
+```
