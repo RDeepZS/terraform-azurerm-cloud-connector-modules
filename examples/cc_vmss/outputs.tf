@@ -63,7 +63,7 @@ Based on the recorded output, the manual sync to start your Azure Function App f
 TB
 }
 locals {
-    plb_ip = (one(module.pub_cc_lb[*].lb_ip) == null) ? "" : one(module.pub_cc_lb[*].lb_ip)
+  plb_ip = (one(module.pub_cc_lb[*].lb_ip) == null) ? "" : one(module.pub_cc_lb[*].lb_ip)
 }
 
 output "testbedconfig" {

@@ -202,17 +202,17 @@ module "cc_gwlb" {
 #    to manually chain your existing PLB to the GWLB in the Azure Portal.
 ################################################################################
 module "cc_pub_lb" {
-  count                 = var.create_consumer_plb ? 1 : 0
-  source                = "../../modules/terraform-zscc-pub_lb-azure"
-  name_prefix           = var.name_prefix
-  resource_tag          = random_string.suffix.result
-  global_tags           = local.global_tags
-  resource_group        = module.network.resource_group_name
-  location              = var.arm_location
-  subnet_id             = module.network.cc_subnet_ids[0]
-  http_probe_port       = var.http_probe_port
-  zones_enabled         = var.zones_enabled
-  zones                 = var.zones
+  count           = var.create_consumer_plb ? 1 : 0
+  source          = "../../modules/terraform-zscc-pub_lb-azure"
+  name_prefix     = var.name_prefix
+  resource_tag    = random_string.suffix.result
+  global_tags     = local.global_tags
+  resource_group  = module.network.resource_group_name
+  location        = var.arm_location
+  subnet_id       = module.network.cc_subnet_ids[0]
+  http_probe_port = var.http_probe_port
+  zones_enabled   = var.zones_enabled
+  zones           = var.zones
 
   # Automatically chain this PLB to the GWLB frontend
   gateway_load_balancer_frontend_ip_configuration_id = module.cc_gwlb.gwlb_frontend_ip_config_id

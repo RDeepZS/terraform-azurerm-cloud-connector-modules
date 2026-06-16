@@ -107,7 +107,7 @@ module "workload" {
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for Cloud Connector registration
 locals {
-  GLB_VIP = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
+  GLB_VIP  = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
   userdata = <<USERDATA
 [ZSCALER]
 CC_URL=${var.cc_vm_prov_url}
@@ -150,11 +150,11 @@ module "cc_vmss" {
   service_nsg_id                 = module.cc_nsg.service_nsg_id[0]
   accelerated_networking_enabled = var.accelerated_networking_enabled
   encryption_at_host_enabled     = var.encryption_at_host_enabled
-  vmss_default_ccs    = var.vmss_default_ccs
-  vmss_min_ccs        = var.vmss_min_ccs
-  vmss_max_ccs        = var.vmss_max_ccs
-  scale_out_threshold = var.scale_out_threshold
-  scale_in_threshold  = var.scale_in_threshold
+  vmss_default_ccs               = var.vmss_default_ccs
+  vmss_min_ccs                   = var.vmss_min_ccs
+  vmss_max_ccs                   = var.vmss_max_ccs
+  scale_out_threshold            = var.scale_out_threshold
+  scale_in_threshold             = var.scale_in_threshold
 
   scheduled_scaling_enabled         = var.scheduled_scaling_enabled
   scheduled_scaling_vmss_min_ccs    = var.scheduled_scaling_vmss_min_ccs

@@ -95,30 +95,30 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
   dynamic "security_rule" {
     for_each = var.has_public_lb ? ["1"] : []
     content {
-  	name                       = "AllowHTTP"
-  	priority                   = 4010
- 	direction                  = "Inbound"
-  	access                     = "Allow"
- 	protocol                   = "Tcp"
-  	source_port_range          = "*"
-  	destination_port_range     = "80"
-  	source_address_prefix      = "*"
-  	destination_address_prefix = "*"
+      name                       = "AllowHTTP"
+      priority                   = 4010
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "80"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
     }
   }
 
   dynamic "security_rule" {
     for_each = var.has_public_lb ? ["1"] : []
     content {
-  	name                       = "AllowHTTPS"
-  	priority                   = 4015
- 	direction                  = "Inbound"
-  	access                     = "Allow"
- 	protocol                   = "Tcp"
-  	source_port_range          = "*"
-  	destination_port_range     = "443"
-  	source_address_prefix      = "*"
-  	destination_address_prefix = "*"
+      name                       = "AllowHTTPS"
+      priority                   = 4015
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "443"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
     }
   }
 
@@ -153,7 +153,7 @@ resource "azurerm_network_security_group" "cc_gwlb_nsg" {
     access                     = "Allow"
     protocol                   = "Udp"
     source_port_range          = "*"
-    destination_port_range     = "*"                        # Allow all UDP inbound; GWLB VXLAN ports are configurable
+    destination_port_range     = "*" # Allow all UDP inbound; GWLB VXLAN ports are configurable
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }

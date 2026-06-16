@@ -62,7 +62,7 @@ module "network" {
   # lb_enabled defaults to true but lb_frontend_ip is not passed for GWLB.
   # The network module detects lb_frontend_ip == null and uses Internet next hop
   # for the workload route table (GWLB handles inbound, not workload egress).
-  lb_enabled            = var.lb_enabled
+  lb_enabled = var.lb_enabled
 }
 
 
@@ -204,21 +204,21 @@ module "cc_identity" {
 # Azure Gateway Load Balancer Module
 ################################################################################
 module "cc_gwlb" {
-  source                = "../../modules/terraform-zscc-gwlb-azure"
-  name_prefix           = var.name_prefix
-  resource_tag          = random_string.suffix.result
-  global_tags           = local.global_tags
-  resource_group        = module.network.resource_group_name
-  location              = var.arm_location
+  source         = "../../modules/terraform-zscc-gwlb-azure"
+  name_prefix    = var.name_prefix
+  resource_tag   = random_string.suffix.result
+  global_tags    = local.global_tags
+  resource_group = module.network.resource_group_name
+  location       = var.arm_location
 
   # Subnet configuration for GWLB
-  subnet_id             = module.network.cc_subnet_ids[0]      # Subnet where GWLB is deployed
+  subnet_id = module.network.cc_subnet_ids[0] # Subnet where GWLB is deployed
 
   # VXLAN settings
-  vxlan_external_port   = var.vxlan_external_port # UDP port for VXLAN encapsulation (default: 4789)
-  vxlan_internal_port   = var.vxlan_internal_port # UDP port for VXLAN decapsulation (default: 4789)
-  vxlan_external_vni    = var.vxlan_external_vni  # VXLAN External Virtual Network Identifier (VNI)
-  vxlan_internal_vni    = var.vxlan_internal_vni  # VXLAN Internal Virtual Network Identifier (VNI)
+  vxlan_external_port = var.vxlan_external_port # UDP port for VXLAN encapsulation (default: 4789)
+  vxlan_internal_port = var.vxlan_internal_port # UDP port for VXLAN decapsulation (default: 4789)
+  vxlan_external_vni  = var.vxlan_external_vni  # VXLAN External Virtual Network Identifier (VNI)
+  vxlan_internal_vni  = var.vxlan_internal_vni  # VXLAN Internal Virtual Network Identifier (VNI)
 
   # Health probe settings
   health_probe_interval = var.health_probe_interval # Probe interval in seconds (default: 15)

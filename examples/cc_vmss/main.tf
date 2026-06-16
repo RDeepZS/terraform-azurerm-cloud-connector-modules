@@ -87,7 +87,7 @@ module "network" {
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for Cloud Connector registration
 locals {
-  GLB_VIP = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
+  GLB_VIP  = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
   userdata = <<USERDATA
 [ZSCALER]
 CC_URL=${var.cc_vm_prov_url}
