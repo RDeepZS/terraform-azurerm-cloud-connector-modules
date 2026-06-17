@@ -383,7 +383,6 @@ fi
 echo "Checking Azure Environment Variables and Cloud Connector bootstrap requirements... For ZPA or custom/byo deployments, please stop and refer to the README and terraform.tfvars file instructions"
 if [[ "$oper" == "up" && ! -e ./.zsecrc ]]; then
 first_run="yes"
-    trap '[[ "$first_run" == "yes" ]] && rm -f .zsecrc' EXIT INT TERM
     echo "export zscaler_cloud='$zscaler_cloud'" > .zsecrc
     # Azure Region selection
     PS3="${CYAN}Select desired Azure region: ${RESET}"
