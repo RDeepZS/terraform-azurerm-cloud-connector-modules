@@ -128,7 +128,13 @@ if [[ "$oper" == "up" ]]; then
         echo "${YELLOW}Existing deployment configuration file identified...${RESET}"
         # initialize environment variables
         . ./.zsecrc
-        echo "Refreshing Deployment Type: ${GREEN}$dtype${RESET}..." 
+        echo "Refreshing Deployment Type: ${GREEN}$dtype${RESET}..."
+        # If this is a private LB or VMSS deployment and PLB was never asked, ask now
+        if [[ "$dtype" == *"vmss"* || "$dtype" == *"lb"* ]] && [[ "$dtype" != *"pub"* && "$dtype" != *"gwlb"* ]]; then
+            if ! grep -q "TF_VAR_plb_deploy" .zsecrc; then
+                query_plb_lb
+            fi
+        fi
     else #Prompt for deployment selection
         PS3="${CYAN}Select desired deployment: ${RESET}"
         deployments=("greenfield - Recommended for isolated test/POV deployments. Creates new network infrastructure, test workloads, and a public jump host" "brownfield - Recommended for prod deployments. Bring-your-own existing network infrastructure customizations + no workload/bastion creation")
