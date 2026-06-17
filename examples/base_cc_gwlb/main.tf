@@ -227,11 +227,15 @@ module "cc_gwlb" {
 
 
 ################################################################################
-# 7. Create consumer Public Load Balancer chained to the GWLB frontend.
-#    All inbound internet traffic hits this PLB's Public IP, gets transparently
-#    redirected through the GWLB → CC VMs for inspection, then returned back.
+# 7. Optionally create consumer Public Load Balancer chained to the GWLB frontend.
+#    If create_consumer_plb = true (default), all inbound internet traffic hits
+#    this PLB's Public IP, is transparently redirected through the GWLB → CC VMs
+#    for inspection, then returned back.
+#    If create_consumer_plb = false, use the gwlb_frontend_ip_config_id output
+#    to manually chain your existing PLB to the GWLB in the Azure Portal.
 ################################################################################
 module "cc_pub_lb" {
+  count                 = var.create_consumer_plb ? 1 : 0
   source                = "../../modules/terraform-zscc-pub_lb-azure"
   name_prefix           = var.name_prefix
   resource_tag          = random_string.suffix.result

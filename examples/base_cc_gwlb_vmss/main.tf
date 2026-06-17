@@ -245,3 +245,32 @@ module "cc_gwlb" {
   probe_threshold       = var.probe_threshold       # Number of consecutive probes required (default: 2)
   number_of_probes      = var.number_of_probes
 }
+
+
+################################################################################
+# 8. Optionally create a consumer Public Load Balancer chained to the GWLB.
+#    If create_consumer_plb = true, Terraform creates a new PLB with a Public IP
+#    and automatically chains it to the GWLB frontend (no Portal steps needed).
+#    If create_consumer_plb = false, use the gwlb_frontend_ip_config_id output
+#    to manually chain your existing PLB to the GWLB in the Azure Portal.
+################################################################################
+module "cc_pub_lb" {
+  count                 = var.create_consumer_plb ? 1 : 0
+  source                = "../../modules/terraform-zscc-pub_lb-azure"
+  name_prefix           = var.name_prefix
+  resource_tag          = random_string.suffix.result
+  global_tags           = local.global_tags
+  resource_group        = module.network.resource_group_name
+  location              = var.arm_location
+  subnet_id             = module.network.cc_subnet_ids[0]
+  http_probe_port       = var.http_probe_port
+  load_distribution     = var.load_distribution
+  zones_enabled         = var.zones_enabled
+  zones                 = var.zones
+  health_check_interval = var.health_check_interval
+  probe_threshold       = var.probe_threshold
+  number_of_probes      = var.number_of_probes
+
+  # Automatically chain this PLB to the GWLB frontend
+  gateway_load_balancer_frontend_ip_configuration_id = module.cc_gwlb.gwlb_frontend_ip_config_id
+}

@@ -47,14 +47,20 @@ locals {
   All NAT GW IPs:
   ${join("\n", module.network.public_ip_address)}
 
-  Consumer Public Load Balancer IP (internet ingress entry point):
-  ${module.cc_pub_lb.lb_ip}
-
-  Gateway Load Balancer Frontend IP (private - GWLB provider, chained to PLB above):
+  Gateway Load Balancer Frontend IP (private - GWLB provider):
   ${module.cc_gwlb.gwlb_ip}
 
-  Gateway Load Balancer Frontend IP Config ID:
+  Gateway Load Balancer Frontend IP Config ID (set this on your consumer PLB to activate chaining):
   ${module.cc_gwlb.gwlb_frontend_ip_config_id}
+
+  %{if length(module.cc_pub_lb) > 0~}
+  Consumer Public Load Balancer IP (internet ingress entry point, auto-chained to GWLB):
+  ${module.cc_pub_lb[0].lb_ip}
+  %{else~}
+  No consumer PLB was created by Terraform.
+  To activate GWLB ingress inspection, go to Azure Portal -> your existing Public LB
+  -> Frontend IP configurations -> Edit -> Gateway Load Balancer -> paste the ID above -> Save.
+  %{endif~}
 
   Workload VM IPs (behind GWLB/CC inspection path):
   ${join("\n  ", module.workload.private_ip)}

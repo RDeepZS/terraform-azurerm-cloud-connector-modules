@@ -47,6 +47,20 @@ else
     esac
 fi
 
+# Early no-op gate for destroy when there's no .zsecrc (the previous successful
+# destroy already archived it to .zsecrc-<timestamp> and removed it).
+if [[ "$oper" == "destroy" && ! -f ./.zsecrc ]]; then
+    echo "${YELLOW}No .zsecrc found — nothing to destroy.${RESET}"
+    latest_archive=$(ls -1t .zsecrc-[0-9]* 2>/dev/null | head -1)
+    if [[ -n "$latest_archive" ]]; then
+        echo "${YELLOW}If you still have live Azure resources from a prior deploy, restore credentials from the latest archive first:${RESET}"
+        echo "    cp ${latest_archive} .zsecrc && $0 $1"
+    else
+        echo "${YELLOW}No .zsecrc-<timestamp> archive present either; run './zsec up' for a fresh deploy.${RESET}"
+    fi
+    exit 0
+fi
+
 if [[ "$oper" == "up" && ! -e ./.zsecrc ]]; then
     PS3="${CYAN}Select your Zscaler Cloud: ${RESET}"
     zs_clouds=("zscloud.net" "zscaler.net" "zscalertwo.net" "zscalerthree.net" "zscalerten.net" "zscalergov.net" "zscalerbeta.net" "other")
@@ -530,8 +544,9 @@ first_run="yes"
         echo "export TF_VAR_vxlan_external_vni=${vxlan_external_vni}" >> .zsecrc
         echo "export TF_VAR_vxlan_internal_vni=${vxlan_internal_vni}" >> .zsecrc
 
-        ### Consumer Public Load Balancer prompt — brownfield cc_gwlb only ###
-        if [[ "$dtype" == "cc_gwlb" ]]; then
+        ### Consumer Public Load Balancer prompt — all GWLB dtypes
+        ### (brownfield cc_gwlb, greenfield base_cc_gwlb, greenfield base_cc_gwlb_vmss)
+        if [[ "$dtype" == "cc_gwlb" || "$dtype" == "base_cc_gwlb" || "$dtype" == "base_cc_gwlb_vmss" ]]; then
             echo ""
             echo "${CYAN}After the Gateway Load Balancer is deployed, a consumer Public Load Balancer is needed to chain to it for inbound inspection.${RESET}"
             while true; do
@@ -1320,7 +1335,9 @@ fi
 # add deployment type to .zsecrc for future runs
 if [[ "$oper" == "up" ]]; then
     echo "${GREEN}Updating .zsecrc with dtype of $dtype${RESET}"
-    sed -i'' -e '/dtype/d' .zsecrc
+    # Portable in-place strip of any existing dtype line (avoids the .zsecrc-e
+    # artifact that BSD/macOS sed -i'' can leave behind and pollute later runs).
+    grep -v '^[[:space:]]*\(export[[:space:]]\+\)\?dtype=' .zsecrc > .zsecrc.tmp && mv .zsecrc.tmp .zsecrc
     echo "export dtype=${dtype}" >> .zsecrc
 fi
 
@@ -1331,8 +1348,14 @@ fi
 if [ -z "$ARM_CLIENT_ID" ] || [ -z "$ARM_CLIENT_SECRET" ] || [ -z "$ARM_SUBSCRIPTION_ID" ] || [ -z "$ARM_TENANT_ID" ] || [ -z "$TF_VAR_arm_location" ]; then
     echo "${RED}Azure Access info is missing or incomplete in .zsecrc.${RESET}"
     echo "${YELLOW}This can happen if a previous './zsec up' run was interrupted before credentials were entered.${RESET}"
-    echo "${YELLOW}Please delete the .zsecrc file and rerun: $0 $1${RESET}"
-    echo "    rm -f .zsecrc && $0 $1"
+    latest_archive=$(ls -1t .zsecrc-[0-9]* 2>/dev/null | head -1)
+    if [[ -n "$latest_archive" ]]; then
+        echo "${YELLOW}To re-attempt, restore the latest archived credentials:${RESET}"
+        echo "    cp ${latest_archive} .zsecrc && $0 $1"
+    else
+        echo "${YELLOW}Please delete the .zsecrc file and rerun:${RESET}"
+        echo "    rm -f .zsecrc && $0 $1"
+    fi
     exit 1
 fi
 
