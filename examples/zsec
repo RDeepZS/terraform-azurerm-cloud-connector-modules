@@ -1323,7 +1323,10 @@ fi
 
 # check for valid environment variables in .zsecrc
 if [ -z "$ARM_CLIENT_ID" ] || [ -z "$ARM_CLIENT_SECRET" ] || [ -z "$ARM_SUBSCRIPTION_ID" ] || [ -z "$ARM_TENANT_ID" ] || [ -z "$TF_VAR_arm_location" ]; then
-    echo "${RED}Azure Access info is missing. Remove .zsecrc file and rerun $0 $1${RESET}"
+    echo "${RED}Azure Access info is missing or incomplete in .zsecrc.${RESET}"
+    echo "${YELLOW}This can happen if a previous './zsec up' run was interrupted before credentials were entered.${RESET}"
+    echo "${YELLOW}Please delete the .zsecrc file and rerun: $0 $1${RESET}"
+    echo "    rm -f .zsecrc && $0 $1"
     exit 1
 fi
 
