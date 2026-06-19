@@ -110,6 +110,6 @@
 #####                                                                                     #####
 ##### Portal:  PLB → Frontend IP configurations → Edit → Gateway Load Balancer dropdown  #####
 ##### CLI:     az network lb frontend-ip update \                                         #####
-#####            --resource-group <rg> --lb-name <plb-name> --name <frontend-name> \     #####
+#####            --resource-group <rg> --lb-name <public_lb-name> --name <frontend-name> \#####
 #####            --gateway-lb <gwlb_frontend_ip_config_id output>                        #####
 #####################################################################################################################

@@ -386,7 +386,7 @@ variable "path_to_scripts" {
   default     = ""
 }
 
-variable "plb_deploy" {
+variable "public_lb_deploy" {
   type        = bool
   description = "Deploy a Public Load-Balancer"
   default     = false

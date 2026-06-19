@@ -15,15 +15,15 @@ usage()
     exit 1
 }
 
-query_plb_lb()
+query_public_lb()
 {
-	plb_default=no
+	public_lb_default=no
 	while true; do
-   		read -r -p "${CYAN}Do you want to deploy a Public load-balancer as well? [Default=$plb_default]: ${RESET}" plb_input
-		plb=${plb_input:-$plb_default}
-		case $plb in
+   		read -r -p "${CYAN}Do you want to deploy a Public load-balancer as well? [Default=$public_lb_default]: ${RESET}" public_lb_input
+		public_lb=${public_lb_input:-$public_lb_default}
+		case $public_lb in
 		yes|y )
-			echo "export TF_VAR_plb_deploy=true" >> .zsecrc
+			echo "export TF_VAR_public_lb_deploy=true" >> .zsecrc
 			break
 			;;
 		no|n )
@@ -145,8 +145,8 @@ if [[ "$oper" == "up" ]]; then
         echo "Refreshing Deployment Type: ${GREEN}$dtype${RESET}..."
         # If this is a private LB or VMSS deployment and PLB was never asked, ask now
         if [[ "$dtype" == *"vmss"* || "$dtype" == *"lb"* ]] && [[ "$dtype" != *"pub"* && "$dtype" != *"gwlb"* ]]; then
-            if ! grep -q "TF_VAR_plb_deploy" .zsecrc; then
-                query_plb_lb
+            if ! grep -q "TF_VAR_public_lb_deploy" .zsecrc; then
+                query_public_lb
             fi
         fi
     else #Prompt for deployment selection
@@ -284,8 +284,8 @@ if [[ "$oper" == "up" ]]; then
                         break
                         ;;
                     5)
-                        echo "Deployment type base_pub_cc_lb selected..."
-                        dtype=base_pub_cc_lb
+                        echo "Deployment type base_cc_public_lb selected..."
+                        dtype=base_cc_public_lb
                         break
                         ;;
                     6)
@@ -323,8 +323,8 @@ if [[ "$oper" == "up" ]]; then
                         break
                         ;;
                     3)
-                        echo "Deployment type base_pub_cc_vmss selected..."
-                        dtype=base_pub_cc_vmss
+                        echo "Deployment type base_cc_public_vmss selected..."
+                        dtype=base_cc_public_vmss
                         break
                         ;;
                     4)
@@ -549,18 +549,18 @@ first_run="yes"
             echo ""
             echo "${CYAN}After the Gateway Load Balancer is deployed, a consumer Public Load Balancer is needed to chain to it for inbound inspection.${RESET}"
             while true; do
-                read -r -p "${CYAN}Do you want Terraform to create a new consumer Public Load Balancer and auto-chain it to the GWLB? [yes/no]: ${RESET}" plb_response
-                plb_response=$(echo "$plb_response" | tr '[:upper:]' '[:lower:]')
-                case $plb_response in
+                read -r -p "${CYAN}Do you want Terraform to create a new consumer Public Load Balancer and auto-chain it to the GWLB? [yes/no]: ${RESET}" public_lb_response
+                public_lb_response=$(echo "$public_lb_response" | tr '[:upper:]' '[:lower:]')
+                case $public_lb_response in
                     yes|y)
                         echo "${GREEN}Terraform will create a new consumer Public LB and automatically chain it to the GWLB frontend.${RESET}"
-                        echo "export TF_VAR_create_consumer_plb=true" >> .zsecrc
+                        echo "export TF_VAR_create_consumer_public_lb=true" >> .zsecrc
                         break
                         ;;
                     no|n)
                         echo "${YELLOW}No consumer PLB will be created by Terraform.${RESET}"
                         echo "After deployment, use the 'gwlb_frontend_ip_config_id' from the testbed output to manually chain your existing Public LB to the GWLB in the Azure Portal."
-                        echo "export TF_VAR_create_consumer_plb=false" >> .zsecrc
+                        echo "export TF_VAR_create_consumer_public_lb=false" >> .zsecrc
                         break
                         ;;
                     *)
@@ -741,7 +741,7 @@ first_run="yes"
 
         if [[ "$dtype" == *"vmss"* ]]; then
 	      if [[ "$dtype" != *"pub"* && "$dtype" != *"gwlb"* ]]; then
-            query_plb_lb
+            query_public_lb
           fi 
           echo "Function App User Managed Identity Information:"
             while true; do
@@ -772,7 +772,7 @@ first_run="yes"
             echo "Auto Scaling deployment type identified. Proceeding to VMSS configurations..." 
         elif [[ "$dtype" == *"lb"* || "$dtype" == "cc_gwlb" ]]; then
 	        if [[ "$dtype" != *"pub"* && "$dtype" != *"gwlb"* ]]; then
-                query_plb_lb
+                query_public_lb
 			fi
             read -r -p "${CYAN}Enter how many Cloud Connectors to deploy? [Default=$cc_count_default]: ${RESET}" cc_count_input
             cc_count=${cc_count_input:-$cc_count_default}

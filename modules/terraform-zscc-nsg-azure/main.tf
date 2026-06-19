@@ -93,7 +93,7 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
   }
 
   dynamic "security_rule" {
-    for_each = var.has_public_lb ? ["1"] : []
+    for_each = var.public_lb_deployed ? ["1"] : []
     content {
       name                       = "AllowHTTP"
       priority                   = 4010
@@ -108,7 +108,7 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
   }
 
   dynamic "security_rule" {
-    for_each = var.has_public_lb ? ["1"] : []
+    for_each = var.public_lb_deployed ? ["1"] : []
     content {
       name                       = "AllowHTTPS"
       priority                   = 4015

@@ -62,7 +62,7 @@ variable "zssupport_server" {
   default     = "199.168.148.101" #for commercial clouds
 }
 
-variable "has_public_lb" {
+variable "public_lb_deployed" {
   type        = bool
   description = "Check if any Public Load Balancer deployed or not"
   default     = false

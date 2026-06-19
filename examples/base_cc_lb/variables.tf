@@ -264,7 +264,7 @@ variable "zssupport_server" {
   default     = "199.168.148.101" #for commercial clouds
 }
 
-variable "plb_deploy" {
+variable "public_lb_deploy" {
   type        = bool
   description = "Deploy a Public Load-Balancer"
   default     = false

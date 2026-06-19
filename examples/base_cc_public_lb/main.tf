@@ -143,7 +143,7 @@ module "cc_vm" {
   ssh_key                        = tls_private_key.key.public_key_openssh
   managed_identity_id            = module.cc_identity.managed_identity_id
   user_data                      = local.userdata
-  pub_backend_address_pool       = module.cc_lb.lb_backend_address_pool
+  public_lb_backend_address_pool = module.cc_lb.lb_backend_address_pool
   lb_association_enabled         = true
   location                       = var.arm_location
   zones_enabled                  = var.zones_enabled
@@ -158,8 +158,8 @@ module "cc_vm" {
   service_nsg_id                 = module.cc_nsg.service_nsg_id
   accelerated_networking_enabled = var.accelerated_networking_enabled
   encryption_at_host_enabled     = var.encryption_at_host_enabled
-  has_public_lb                  = true
-  has_private_lb                 = false
+  public_lb_deployed             = true
+  private_lb_enabled             = false
 }
 
 
@@ -179,7 +179,7 @@ module "cc_nsg" {
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
   zssupport_server       = var.zssupport_server
-  has_public_lb          = true
+  public_lb_deployed     = true
 }
 
 
@@ -205,7 +205,7 @@ module "cc_identity" {
 ################################################################################
 # Azure Load Balancer Module variables
 module "cc_lb" {
-  source                = "../../modules/terraform-zscc-pub_lb-azure"
+  source                = "../../modules/terraform-zscc-public-lb-azure"
   name_prefix           = var.name_prefix
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags

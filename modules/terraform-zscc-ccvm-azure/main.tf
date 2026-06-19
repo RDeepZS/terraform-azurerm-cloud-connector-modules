@@ -72,7 +72,7 @@ resource "azurerm_network_interface_security_group_association" "cc_service_nic_
 ################################################################################
 # Associate CC forwarding interface to Azure LB backend pool
 resource "azurerm_network_interface_backend_address_pool_association" "cc_vm_service_nic_lb_association" {
-  count                   = (var.lb_association_enabled == true && var.has_private_lb) ? var.cc_count : 0
+  count                   = (var.lb_association_enabled == true && var.private_lb_enabled) ? var.cc_count : 0
   network_interface_id    = azurerm_network_interface.cc_service_nic[count.index].id
   ip_configuration_name   = "${var.name_prefix}-ccvm-fwd-nic-conf-${var.resource_tag}"
   backend_address_pool_id = var.backend_address_pool
@@ -81,13 +81,13 @@ resource "azurerm_network_interface_backend_address_pool_association" "cc_vm_ser
 }
 
 # Associate CC forwarding interface to Azure Public LB backend pool
-resource "azurerm_network_interface_backend_address_pool_association" "cc_vm_service_nic_pub_lb_association" {
-  count                   = (var.lb_association_enabled == true && var.has_public_lb) ? var.cc_count : 0
+resource "azurerm_network_interface_backend_address_pool_association" "cc_vm_service_nic_public_lb_association" {
+  count                   = (var.lb_association_enabled == true && var.public_lb_deployed) ? var.cc_count : 0
   network_interface_id    = azurerm_network_interface.cc_service_nic[count.index].id
   ip_configuration_name   = "${var.name_prefix}-ccvm-fwd-nic-conf-${var.resource_tag}"
-  backend_address_pool_id = var.pub_backend_address_pool
+  backend_address_pool_id = var.public_lb_backend_address_pool
 
-  depends_on = [var.pub_backend_address_pool]
+  depends_on = [var.public_lb_backend_address_pool]
 }
 
 ################################################################################

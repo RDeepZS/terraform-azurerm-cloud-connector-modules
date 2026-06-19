@@ -374,7 +374,7 @@ variable "byo_service_nsg_names" {
   default     = null
 }
 
-variable "plb_deploy" {
+variable "public_lb_deploy" {
   type        = bool
   description = "Deploy a Public Load-Balancer"
   default     = false

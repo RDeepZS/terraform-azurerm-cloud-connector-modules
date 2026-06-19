@@ -35,7 +35,7 @@ Load Balancer Frontend IP:
 ${module.cc_lb.lb_ip}
 
 Public Load Balancer Frontend IP:
-${local.plb_ip}
+${local.public_ip_ip}
 
 WORKLOAD Details/Commands:
 SSH to WORKLOAD
@@ -70,7 +70,7 @@ ${join("\n", module.network.public_ip_address)}
 TB
 }
 locals {
-  plb_ip = (one(module.pub_cc_lb[*].lb_ip) == null) ? "" : one(module.pub_cc_lb[*].lb_ip)
+  public_ip_ip = (one(module.cc_public_lb[*].lb_ip) == null) ? "" : one(module.cc_public_lb[*].lb_ip)
   workload_map = {
     for index, ip in module.workload.private_ip :
     index => ip

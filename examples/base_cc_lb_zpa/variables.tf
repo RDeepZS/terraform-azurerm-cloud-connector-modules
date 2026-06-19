@@ -289,7 +289,7 @@ variable "target_address" {
   default     = ["185.46.212.88", "185.46.212.89"]
 }
 
-variable "plb_deploy" {
+variable "public_lb_deploy" {
   type        = bool
   description = "Deploy a Public Load-Balancer"
   default     = false

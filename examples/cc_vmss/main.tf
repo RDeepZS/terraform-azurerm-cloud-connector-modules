@@ -87,7 +87,7 @@ module "network" {
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for Cloud Connector registration
 locals {
-  GLB_VIP  = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
+  GLB_VIP  = local.public_ip_ip != "" ? "GLB_VIP=${local.public_ip_ip}" : ""
   userdata = <<USERDATA
 [ZSCALER]
 CC_URL=${var.cc_vm_prov_url}
@@ -118,7 +118,7 @@ module "cc_vmss" {
   managed_identity_id            = module.cc_identity.managed_identity_id
   user_data                      = local.userdata
   backend_address_pool           = module.cc_lb.lb_backend_address_pool
-  pub_backend_address_pool       = (var.plb_deploy == true) ? module.pub_cc_lb[0].lb_backend_address_pool : null
+  public_lb_backend_address_pool = (var.public_lb_deploy == true) ? module.cc_public_lb[0].lb_backend_address_pool : null
   zones_enabled                  = var.zones_enabled
   zones                          = var.zones
   ccvm_instance_type             = var.ccvm_instance_type
@@ -131,7 +131,7 @@ module "cc_vmss" {
   service_nsg_id                 = module.cc_nsg.service_nsg_id[0]
   accelerated_networking_enabled = var.accelerated_networking_enabled
   encryption_at_host_enabled     = var.encryption_at_host_enabled
-  has_public_lb                  = var.plb_deploy
+  public_lb_deployed                  = var.public_lb_deploy
 
   vmss_default_ccs    = var.vmss_default_ccs
   vmss_min_ccs        = var.vmss_min_ccs
@@ -194,7 +194,7 @@ module "cc_nsg" {
   location               = var.arm_location
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
-  has_public_lb          = var.plb_deploy
+  public_lb_deployed     = var.public_lb_deploy
 
   byo_nsg = var.byo_nsg
   # optional inputs. only required if byo_nsg set to true
@@ -245,9 +245,9 @@ module "cc_lb" {
   number_of_probes      = var.number_of_probes
 }
 
-module "pub_cc_lb" {
-  source                = "../../modules/terraform-zscc-pub_lb-azure"
-  count                 = (var.plb_deploy == true) ? 1 : 0
+module "cc_public_lb" {
+  source                = "../../modules/terraform-zscc-public-lb-azure"
+  count                 = (var.public_lb_deploy == true) ? 1 : 0
   name_prefix           = var.name_prefix
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags

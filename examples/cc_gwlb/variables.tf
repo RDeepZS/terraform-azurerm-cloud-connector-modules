@@ -348,7 +348,7 @@ variable "existing_nat_gw_subnet_association" {
   default     = false
 }
 
-variable "create_consumer_plb" {
+variable "create_consumer_public_lb" {
   type        = bool
   description = "Whether to create a new consumer Public Load Balancer and automatically chain it to the GWLB frontend. Set to true to have Terraform create and chain a new PLB. Set to false if you will link your own existing PLB to the GWLB frontend IP Config ID manually."
   default     = false

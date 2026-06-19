@@ -24,7 +24,7 @@ VMSS IDs:
 ${join("\n", module.cc_vmss.vmss_ids)}
 
 Public Load Balancer Frontend IP:
-${local.plb_ip}
+${local.public_ip_ip}
 
 Function App ID:
 ${module.cc_functionapp.function_app_id}
@@ -76,7 +76,7 @@ TB
 }
 
 locals {
-  plb_ip = module.cc_lb.lb_ip
+  public_ip_ip = module.cc_lb.lb_ip
   workload_map = {
     for index, ip in module.workload.private_ip :
     index => ip

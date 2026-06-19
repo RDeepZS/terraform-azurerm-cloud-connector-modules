@@ -29,9 +29,9 @@ ${module.cc_gwlb.gwlb_ip}
 Gateway Load Balancer Frontend IP Config ID (set this on your consumer PLB to activate chaining):
 ${module.cc_gwlb.gwlb_frontend_ip_config_id}
 
-%{if length(module.cc_pub_lb) > 0~}
+%{if length(module.cc_public_lb) > 0~}
 Consumer Public Load Balancer IP (auto-created and chained to GWLB):
-${module.cc_pub_lb[0].lb_ip}
+${module.cc_public_lb[0].lb_ip}
 %{else~}
 No consumer PLB was created by Terraform.
 To activate GWLB ingress inspection, go to Azure Portal -> your existing Public LB

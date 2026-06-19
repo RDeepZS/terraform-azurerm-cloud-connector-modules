@@ -107,7 +107,7 @@ module "workload" {
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for Cloud Connector registration
 locals {
-  GLB_VIP  = local.plb_ip != "" ? "GLB_VIP=${local.plb_ip}" : ""
+  GLB_VIP  = local.public_ip_ip != "" ? "GLB_VIP=${local.public_ip_ip}" : ""
   userdata = <<USERDATA
 [ZSCALER]
 CC_URL=${var.cc_vm_prov_url}
@@ -211,7 +211,7 @@ module "cc_nsg" {
   location               = var.arm_location
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
-  has_public_lb          = true
+  public_lb_deployed     = true
 }
 
 
@@ -240,7 +240,7 @@ module "cc_identity" {
 ################################################################################
 # Azure Load Balancer Module variables
 module "cc_lb" {
-  source                = "../../modules/terraform-zscc-pub_lb-azure"
+  source                = "../../modules/terraform-zscc-public-lb-azure"
   name_prefix           = var.name_prefix
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags

@@ -112,7 +112,7 @@ variable "backend_address_pool" {
   default     = null
 }
 
-variable "pub_backend_address_pool" {
+variable "public_lb_backend_address_pool" {
   type        = string
   description = "Azure Public LB Backend Address Pool ID for NIC association"
   default     = null
@@ -285,7 +285,7 @@ variable "scheduled_scaling_end_time_min" {
   default     = 0
 }
 
-variable "has_public_lb" {
+variable "public_lb_deployed" {
   type        = bool
   description = "Check if any Public Load Balancer deployed or not"
   default     = false
