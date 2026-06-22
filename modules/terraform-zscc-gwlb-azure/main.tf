@@ -30,19 +30,34 @@ resource "azurerm_lb_backend_address_pool" "cc_gwlb_backend_pool" {
   name            = "${var.name_prefix}-cc-gwlb-backend-${var.resource_tag}"
   loadbalancer_id = azurerm_lb.cc_gwlb.id
 
-  # Tunnel Interfaces for VXLAN Traffic
+  # Tunnel Interfaces for VXLAN Traffic.
+  # GWLB backend pools require exactly two tunnel interfaces (one Internal,
+  # one External). The Internal interface carries traffic decapsulated and
+  # delivered to backend Cloud Connector NICs; the External interface carries
+  # traffic re-encapsulated and returned to the consumer (chained Public LB).
+  # The pair { port, identifier } must be unique between the two interfaces.
   tunnel_interface {
-    port       = var.vxlan_internal_port # Internal VXLAN Port (e.g., 4789)
-    identifier = var.vxlan_internal_vni  # Internal VXLAN VNI (e.g., 600)
+    port       = var.vxlan_internal_port
+    identifier = var.vxlan_internal_vni
     protocol   = "VXLAN"
     type       = "Internal"
   }
 
   tunnel_interface {
-    port       = var.vxlan_external_port # External VXLAN Port (e.g., 4789)
-    identifier = var.vxlan_external_vni  # External VXLAN VNI (e.g., 500)
+    port       = var.vxlan_external_port
+    identifier = var.vxlan_external_vni
     protocol   = "VXLAN"
     type       = "External"
+  }
+
+  # Distinctness check: at least one of (port, VNI) must differ between the
+  # two tunnel interfaces, otherwise Azure rejects the backend pool with
+  # "tunnel interfaces must be unique".
+  lifecycle {
+    precondition {
+      condition     = var.vxlan_internal_port != var.vxlan_external_port || var.vxlan_internal_vni != var.vxlan_external_vni
+      error_message = "GWLB tunnel interfaces must be unique: the (port, VNI) pair for the Internal interface must differ from the External interface in at least one value. Adjust var.vxlan_internal_port / var.vxlan_external_port and/or var.vxlan_internal_vni / var.vxlan_external_vni so they are not identical."
+    }
   }
 }
 
@@ -64,12 +79,19 @@ resource "azurerm_lb_probe" "cc_gwlb_probe" {
 # Create Gateway Load Balancer Rules
 ################################################################################
 
+# NOTE: protocol = "All" with frontend_port = 0 / backend_port = 0 is the
+# REQUIRED configuration for Azure Gateway Load Balancer transparent mode.
+# Unlike Standard LB rules (where port 0 is invalid), GWLB rules act as a
+# passthrough for already-VXLAN-encapsulated traffic and do not match on a
+# specific L4 port. Do not change these three fields without also revisiting
+# the Azure GWLB documentation:
+#   https://learn.microsoft.com/azure/load-balancer/gateway-overview
 resource "azurerm_lb_rule" "cc_gwlb_rule" {
   name                           = "${var.name_prefix}-cc-gwlb-rule-${var.resource_tag}"
   loadbalancer_id                = azurerm_lb.cc_gwlb.id
-  protocol                       = "All" # GWLB rules usually use "All" for VXLAN traffic
-  frontend_port                  = 0     # GWLB rules use port `0` to allow encapsulated VXLAN traffic
-  backend_port                   = 0     # Backend pool port is also set to `0`
+  protocol                       = "All"
+  frontend_port                  = 0
+  backend_port                   = 0
   frontend_ip_configuration_name = azurerm_lb.cc_gwlb.frontend_ip_configuration[0].name
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.cc_gwlb_backend_pool.id] # Wrap backend pool in a list
   probe_id                       = azurerm_lb_probe.cc_gwlb_probe.id

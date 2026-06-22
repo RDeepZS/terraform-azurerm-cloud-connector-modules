@@ -146,12 +146,18 @@ module "cc_nsg" {
   nsg_count              = var.reuse_nsg == false ? var.cc_count : 1
   name_prefix            = var.name_prefix
   resource_tag           = random_string.suffix.result
-  resource_group         = module.network.resource_group_name
+  resource_group         = var.byo_nsg == false ? module.network.resource_group_name : var.byo_nsg_rg
   location               = var.arm_location
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
   zssupport_server       = var.zssupport_server
   gwlb_enabled           = true
+
+  byo_nsg = var.byo_nsg
+  # optional inputs. only required if byo_nsg set to true
+  byo_mgmt_nsg_names    = var.byo_mgmt_nsg_names
+  byo_service_nsg_names = var.byo_service_nsg_names
+  # optional inputs. only required if byo_nsg set to true
 }
 
 

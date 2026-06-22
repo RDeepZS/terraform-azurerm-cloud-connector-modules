@@ -104,6 +104,14 @@ Use the [**Starter Deployment Template with Gateway Load Balancer**](examples/ba
 
 Use the [**Starter Deployment Template with Gateway Load Balancer and VMSS**](examples/base_cc_gwlb_vmss) to deploy your Cloud Connectors in a new resource group and virtual network with an Azure Gateway Load Balancer and Virtual Machine Scale Sets for auto-scaling inline traffic inspection.
 
+### **Starter Deployment Template with Public Load Balancer**
+
+Use the [**Starter Deployment Template with Public Load Balancer**](examples/base_cc_public_lb) to deploy your Cloud Connectors in a new resource group and virtual network fronted by an Azure Standard Public Load Balancer for inbound traffic distribution (e.g. `fwd ZIA` DNAT use cases).
+
+### **Starter Deployment Template with Public Load Balancer and VMSS**
+
+Use the [**Starter Deployment Template with Public Load Balancer and VMSS**](examples/base_cc_public_vmss) to deploy your Cloud Connectors in a new resource group and virtual network fronted by an Azure Standard Public Load Balancer with Virtual Machine Scale Sets for elastic inbound traffic handling.
+
 
 ## **Brownfield Deployment**
 
@@ -125,7 +133,7 @@ Optional: Edit the terraform.tfvars file under your desired deployment type (ie:
 **Brownfield Deployment Types**
 
 ```
-Deployment Type: (cc_lb | cc_vmss | cc_gwlb):
+Deployment Type: (cc_lb | cc_vmss | cc_gwlb | cc_gwlb_vmss):
 ```
 
 ### **Custom Deployment Template with Azure Load Balancer**
@@ -135,6 +143,8 @@ Use the [**Custom Deployment template with Azure Load Balancer**](examples/cc_lb
 Use the [**Custom Deployment template with Virtual Machine Scale Sets (VMSS)**](examples/cc_vmss) to deploy your Cloud Connectors in a new or existing VNet and load balance traffic across multiple Cloud Connectors. Zscaler's recommended deployment method is Azure Load Balancer. Azure Load Balancer distributes traffic across multiple Cloud Connectors and achieves high availability. For added resiliency and elasticity, Cloud Connectors are deployed in Virtual Machine Scale Sets (VMSS) with accompanying Zscaler Function App packaged zip file. Optional Azure Private DNS Resolver resource creation per variable zpa_enabled.
 
 Use the [**Custom Deployment template with Gateway Load Balancer**](examples/cc_gwlb) to deploy your Cloud Connectors in a new or existing VNet with an Azure Gateway Load Balancer for transparent inline traffic inspection.
+
+Use the [**Custom Deployment template with Gateway Load Balancer and VMSS**](examples/cc_gwlb_vmss) to deploy your Cloud Connectors in a new or existing VNet with an Azure Gateway Load Balancer and Virtual Machine Scale Sets for transparent inline traffic inspection with auto-scaling.
 
 <br>
 

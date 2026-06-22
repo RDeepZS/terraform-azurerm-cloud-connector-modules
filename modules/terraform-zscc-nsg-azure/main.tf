@@ -138,11 +138,13 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
 }
 
 ################################################################################
-# Create NSG Specifically for Gateway Load Balancer (GWLB)
+# Create NSG specifically for the service interface in Gateway Load Balancer
+# (GWLB) deployments. Naming follows the cc_*_nsg pattern of the mgmt and
+# service NSGs above.
 ################################################################################
-resource "azurerm_network_security_group" "cc_gwlb_nsg" {
+resource "azurerm_network_security_group" "cc_service_gwlb_nsg" {
   count               = var.gwlb_enabled ? 1 : 0
-  name                = "${var.name_prefix}-gwlb-nsg-${var.resource_tag}"
+  name                = "${var.name_prefix}-cc-service-gwlb-nsg-${var.resource_tag}"
   location            = var.location
   resource_group_name = var.resource_group
 

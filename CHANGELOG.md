@@ -1,3 +1,41 @@
+## v0.9.0 (Unreleased)
+
+FEATURES:
+* Azure Gateway Load Balancer (GWLB) support for Cloud Connector — enables transparent inline inspection for ingress traffic that is not possible with the existing egress-only Private LB topology.
+    - add: module terraform-zscc-gwlb-azure for GWLB and dual-VXLAN backend pool orchestration
+    - add: module terraform-zscc-public-lb-azure for the consumer Public LB that chains to the GWLB frontend (also usable standalone for inbound DNAT / fwd ZIA)
+    - add: greenfield example base_cc_gwlb (CC VMs + GWLB)
+    - add: greenfield example base_cc_gwlb_vmss (CC VMSS + GWLB)
+    - add: greenfield example base_cc_public_lb (CC VMs + standalone Public LB)
+    - add: greenfield example base_cc_public_vmss (CC VMSS + standalone Public LB)
+    - add: brownfield example cc_gwlb (CC VMs + GWLB in existing VNet)
+    - add: brownfield example cc_gwlb_vmss (CC VMSS + GWLB in existing VNet)
+    - add: zsec script support for all new GWLB and Public LB greenfield and brownfield deployment types
+    - add: zsec prompt create_consumer_plb to optionally create and auto-chain a consumer Public LB to the GWLB frontend (covered on first-run, .zsecrc re-use, and destroy paths across cc_gwlb, base_cc_gwlb, and base_cc_gwlb_vmss)
+
+ENHANCEMENTS:
+* refactor: zsec portability fixes — eliminate BSD sed artifacts so the wrapper script works consistently on macOS and Linux
+* fix: zsec no longer pre-creates .zsecrc before the deployment type is selected (prevents stale state on aborted runs)
+* refactor: rename CCVM module variables has_private_lb/has_public_lb to private_lb_enabled/public_lb_enabled to match the existing _enabled suffix convention
+
+NOTES:
+* ZPA (Azure Private DNS Resolver) variants are intentionally not provided for the new GWLB and Public LB greenfield examples. ZPA conditional forwarding is paired with Cloud Connector egress (Private LB) topologies; the GWLB ingress-inspection and standalone Public LB topologies do not require an Azure Private DNS Resolver in their reference deployment.
+
+## v0.8.0 (July 11, 2025)
+
+FEATURES:
+* Official support for Zscaler Azure Tag Discovery Service
+* add: new examples ztags_standalone and module terraform-zscc-ztags-azure
+
+ENHANCEMENTS:
+* add: variable asp_sku_name for VMSS Deployments in regions that do not support Flex Consumption App Service Plan
+* add: zsec support for Zscaler Azure Tag Discovery Service configuration
+* add: AzAPI provider (version 2.2.x) support for configuring Azure Event Grid resources
+
+BUG FIXES:
+* fix: new VMSS Function App version [v1.0.2](modules/terraform-zscc-function-app-azure/zscaler_cc_function_app.zip) updating requests Python library from version 2.29.0 to 2.32.2
+* fix: add default tags to missing resources
+
 ## v0.7.0 (March 10, 2025)
 
 FEATURES:

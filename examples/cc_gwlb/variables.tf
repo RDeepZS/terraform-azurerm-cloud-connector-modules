@@ -348,6 +348,30 @@ variable "existing_nat_gw_subnet_association" {
   default     = false
 }
 
+variable "byo_nsg" {
+  type        = bool
+  description = "Bring your own Network Security Groups for Cloud Connector"
+  default     = false
+}
+
+variable "byo_nsg_rg" {
+  type        = string
+  description = "User provided existing NSG Resource Group. This must be populated if byo_nsg variable is true"
+  default     = ""
+}
+
+variable "byo_mgmt_nsg_names" {
+  type        = list(string)
+  description = "Existing Management Network Security Group IDs for Cloud Connector VM association. This must be populated if byo_nsg variable is true"
+  default     = null
+}
+
+variable "byo_service_nsg_names" {
+  type        = list(string)
+  description = "Existing Service Network Security Group ID for Cloud Connector VM association. This must be populated if byo_nsg variable is true"
+  default     = null
+}
+
 variable "create_consumer_public_lb" {
   type        = bool
   description = "Whether to create a new consumer Public Load Balancer and automatically chain it to the GWLB frontend. Set to true to have Terraform create and chain a new PLB. Set to false if you will link your own existing PLB to the GWLB frontend IP Config ID manually."

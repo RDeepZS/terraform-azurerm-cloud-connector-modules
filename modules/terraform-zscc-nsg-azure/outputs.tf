@@ -9,9 +9,9 @@ output "service_nsg_id" {
 }
 
 ################################################################################
-# Output the NSG ID for GWLB
+# Output the NSG ID for the service interface in GWLB deployments
 ################################################################################
-output "gwlb_nsg_id" {
-  description = "Network Security Group ID for Gateway Load Balancer subnet"
-  value       = var.gwlb_enabled ? azurerm_network_security_group.cc_gwlb_nsg[0].id : null
+output "service_gwlb_nsg_id" {
+  description = "Network Security Group ID for the service interface in Gateway Load Balancer (GWLB) deployments"
+  value       = var.gwlb_enabled ? azurerm_network_security_group.cc_service_gwlb_nsg[0].id : null
 }

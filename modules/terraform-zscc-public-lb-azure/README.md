@@ -1,6 +1,13 @@
-# Zscaler Cloud Connector / Azure Load Balancer Module
+# Zscaler Cloud Connector / Azure Public Load Balancer Module
 
-This module creates a Standard Load Balancer, backend addres pool, LB rules, and LB health probes to be used with Cloud Connector clusters.
+This module creates a Standard Public Load Balancer with a Public IP frontend, backend address pool, TCP rules (ports 80 and 443), and HTTP health probe, to be used with Cloud Connector clusters that require inbound DNAT (e.g. the `fwd ZIA` feature).
+
+The module can be used in two modes:
+
+1. **Standalone Public LB** — the Public IP frontend distributes inbound traffic directly to CC backend NICs (or VMSS instances). Used by `base_cc_public_lb` and `base_cc_public_vmss` examples.
+2. **Consumer LB chained to a Gateway Load Balancer** — when `gateway_load_balancer_frontend_ip_configuration_id` is set, inbound traffic at the Public IP frontend is transparently redirected through the GWLB (and its CC VMs/VMSS) before reaching the original destination. Used by all GWLB examples when `create_consumer_public_lb = true`.
+
+LB rules have `enable_floating_ip = true`. This is required to support DNAT for the `fwd ZIA` feature. There is no side effect when used standalone — the Public LB is a passthrough LB and its VIP is not currently used by the backend.
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
@@ -28,11 +35,14 @@ No modules.
 | [azurerm_lb_backend_address_pool.cc_lb_backend_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_backend_address_pool) | resource |
 | [azurerm_lb_probe.cc_lb_probe](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_probe) | resource |
 | [azurerm_lb_rule.cc_lb_rule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_rule) | resource |
+| [azurerm_lb_rule.cc_lb_rule_443](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_rule) | resource |
+| [azurerm_public_ip.frontend_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_gateway_load_balancer_frontend_ip_configuration_id"></a> [gateway\_load\_balancer\_frontend\_ip\_configuration\_id](#input\_gateway\_load\_balancer\_frontend\_ip\_configuration\_id) | The ID of the Gateway Load Balancer frontend IP configuration to chain this Public Load Balancer to. When set, all traffic through this PLB frontend will be transparently redirected through the GWLB (and its CC VMs) before reaching the backend. Leave null to disable GWLB chaining. | `string` | `null` | no |
 | <a name="input_global_tags"></a> [global\_tags](#input\_global\_tags) | Populate any custom user defined tags from a map | `map(string)` | `{}` | no |
 | <a name="input_health_check_interval"></a> [health\_check\_interval](#input\_health\_check\_interval) | The interval, in seconds, for how frequently to probe the endpoint for health status. Typically, the interval is slightly less than half the allocated timeout period (in seconds) which allows two full probes before taking the instance out of rotation. The default value is 15, the minimum value is 5 | `number` | `15` | no |
 | <a name="input_http_probe_port"></a> [http\_probe\_port](#input\_http\_probe\_port) | Port number for Cloud Connector cloud init to enable listener port for HTTP probe from Azure LB | `number` | `50000` | no |
@@ -51,6 +61,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_lb_backend_address_pool"></a> [lb\_backend\_address\_pool](#output\_lb\_backend\_address\_pool) | Azure Load Balancer Backend Pool ID |
-| <a name="output_lb_ip"></a> [lb\_ip](#output\_lb\_ip) | Azure Load Balancer Frontend IP |
+| <a name="output_lb_backend_address_pool"></a> [lb\_backend\_address\_pool](#output\_lb\_backend\_address\_pool) | Azure Public Load Balancer Backend Pool ID |
+| <a name="output_lb_ip"></a> [lb\_ip](#output\_lb\_ip) | Azure Public Load Balancer Frontend IP |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
