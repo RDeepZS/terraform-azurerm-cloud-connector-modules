@@ -41,7 +41,8 @@ resource "local_file" "private_key" {
 
 ################################################################################
 # 1. Create/reference all network infrastructure resource dependencies for all
-#    child modules (Resource Group, VNet, Subnets, NAT Gateway, Route Tables)
+#    child modules (Resource Group, VNet, Subnets, NAT Gateway, Route Tables).
+#    This brownfield example supports BYO VNet/Subnet/NAT GW via byo_* variables.
 ################################################################################
 module "network" {
   source                = "../../modules/terraform-zscc-network-azure"
@@ -53,7 +54,8 @@ module "network" {
   cc_subnets            = var.cc_subnets
   zones_enabled         = var.zones_enabled
   zones                 = var.zones
-  #bring-your-own variables
+
+  # Bring-your-own VNet/Subnet/NAT GW variables
   byo_rg                             = var.byo_rg
   byo_rg_name                        = var.byo_rg_name
   byo_vnet                           = var.byo_vnet
@@ -86,10 +88,6 @@ CC_URL=${var.cc_vm_prov_url}
 AZURE_VAULT_URL=${var.azure_vault_url}
 HTTP_PROBE_PORT=${var.http_probe_port}
 AZURE_MANAGED_IDENTITY_CLIENT_ID=${module.cc_identity.managed_identity_client_id}
-VXLAN_EXTERNAL_PORT=${var.vxlan_external_port}
-VXLAN_INTERNAL_PORT=${var.vxlan_internal_port}
-VXLAN_EXTERNAL_VNI=${var.vxlan_external_vni}
-VXLAN_INTERNAL_VNI=${var.vxlan_internal_vni}
 USERDATA
 }
 
@@ -117,7 +115,7 @@ module "cc_vm" {
   ssh_key                        = tls_private_key.key.public_key_openssh
   managed_identity_id            = module.cc_identity.managed_identity_id
   user_data                      = local.userdata
-  backend_address_pool           = module.cc_gwlb.gwlb_backend_address_pool_id
+  backend_address_pool           = module.cc_public_lb.lb_backend_address_pool
   lb_association_enabled         = true
   location                       = var.arm_location
   zones_enabled                  = var.zones_enabled
@@ -132,6 +130,7 @@ module "cc_vm" {
   service_nsg_id                 = module.cc_nsg.service_nsg_id
   accelerated_networking_enabled = var.accelerated_networking_enabled
   encryption_at_host_enabled     = var.encryption_at_host_enabled
+  public_lb_enabled              = true
 }
 
 
@@ -151,15 +150,11 @@ module "cc_nsg" {
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
   zssupport_server       = var.zssupport_server
-  gwlb_enabled           = true
-  vxlan_internal_port    = var.vxlan_internal_port
-  vxlan_external_port    = var.vxlan_external_port
+  public_lb_deployed     = true
 
-  byo_nsg = var.byo_nsg
-  # optional inputs. only required if byo_nsg set to true
+  byo_nsg               = var.byo_nsg
   byo_mgmt_nsg_names    = var.byo_mgmt_nsg_names
   byo_service_nsg_names = var.byo_service_nsg_names
-  # optional inputs. only required if byo_nsg set to true
 }
 
 
@@ -179,49 +174,63 @@ module "cc_identity" {
 
 
 ################################################################################
-# 5. Create Azure Gateway Load Balancer in CC subnet with VXLAN tunnel
-#    interfaces, health probe, and load balancing rule
+# 5. Create Public Load Balancer (standalone — not chained to a GWLB).
+#    This PLB provides inbound DNAT / forwarding for ZIA inspection in a
+#    routed-mode topology: Internet → PLB Public IP → CC service NIC → ILB.
+#
+#    Traffic flow:
+#      Internet → PLB (Public IP, disable_outbound_snat=true) → CC VMs
+#      CC VMs → ILB (internal, floating IP) → downstream workloads
+#
+#    CC-side configuration required (outside Terraform):
+#      • DNAT rule: PLB frontend IP → workload destination
+#      • SNAT rule: use ILB frontend IP as source for return traffic
+#
+#    See the downstream ILB module (module.cc_ilb) below for the ILB wiring.
 ################################################################################
-module "cc_gwlb" {
-  source                = "../../modules/terraform-zscc-gwlb-azure"
+module "cc_public_lb" {
+  source                = "../../modules/terraform-zscc-public-lb-azure"
   name_prefix           = var.name_prefix
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags
   resource_group        = module.network.resource_group_name
   location              = var.arm_location
   subnet_id             = module.network.cc_subnet_ids[0]
-  vxlan_external_port   = var.vxlan_external_port
-  vxlan_internal_port   = var.vxlan_internal_port
-  vxlan_external_vni    = var.vxlan_external_vni
-  vxlan_internal_vni    = var.vxlan_internal_vni
   http_probe_port       = var.http_probe_port
-  health_probe_interval = var.health_probe_interval
-  probe_threshold       = var.probe_threshold
+  load_distribution     = var.load_distribution
   zones_enabled         = var.zones_enabled
   zones                 = var.zones
+  health_check_interval = var.health_check_interval
+  probe_threshold       = var.probe_threshold
+  number_of_probes      = var.number_of_probes
+
+  # gateway_load_balancer_frontend_ip_configuration_id is intentionally omitted
+  # (null = standalone PLB, not chained to a GWLB)
 }
 
 
 ################################################################################
-# 6. Optionally create a consumer Public Load Balancer chained to the GWLB.
-#    If create_consumer_public_lb = true, Terraform creates a new PLB with a Public IP
-#    and automatically chains it to the GWLB frontend (no Portal steps needed).
-#    If create_consumer_public_lb = false, use the gwlb_frontend_ip_config_id output
-#    to manually chain your existing PLB to the GWLB in the Azure Portal.
+# 6. Create downstream Internal Load Balancer (ILB) for PLB → CC → ILB topology.
+#    The ILB sits on the CC service subnet and uses floating IP so that CC VMs
+#    receive the original PLB frontend IP for DNAT processing.
+#
+#    Workload route tables should point their default route to the ILB frontend IP
+#    so that return traffic from workloads is steered back through the CC VMs.
 ################################################################################
-module "cc_public_lb" {
-  count           = var.create_consumer_public_lb ? 1 : 0
-  source          = "../../modules/terraform-zscc-public-lb-azure"
-  name_prefix     = var.name_prefix
-  resource_tag    = random_string.suffix.result
-  global_tags     = local.global_tags
-  resource_group  = module.network.resource_group_name
-  location        = var.arm_location
-  subnet_id       = module.network.cc_subnet_ids[0]
-  http_probe_port = var.http_probe_port
-  zones_enabled   = var.zones_enabled
-  zones           = var.zones
+module "cc_ilb" {
+  source         = "../../modules/terraform-zscc-lb-azure"
+  name_prefix    = var.name_prefix
+  resource_tag   = random_string.suffix.result
+  global_tags    = local.global_tags
+  resource_group = module.network.resource_group_name
+  location       = var.arm_location
+  subnet_id      = module.network.cc_subnet_ids[0]
 
-  # Automatically chain this PLB to the GWLB frontend
-  gateway_load_balancer_frontend_ip_configuration_id = module.cc_gwlb.gwlb_frontend_ip_config_id
+  http_probe_port       = var.http_probe_port
+  health_check_interval = var.health_check_interval
+  probe_threshold       = var.probe_threshold
+  number_of_probes      = var.number_of_probes
+  load_distribution     = var.load_distribution
+  zones_enabled         = var.zones_enabled
+  zones                 = var.zones
 }

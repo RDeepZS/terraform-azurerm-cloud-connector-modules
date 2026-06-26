@@ -200,10 +200,17 @@ module "cc_identity" {
 
 
 ################################################################################
-# 7. Create Azure Load Balancer in CC VNet with all Backend Pools, Rules, and 
-#    Health Probes
+# 7. Create Public Load Balancer (PLB) for inbound internet traffic.
+#    The PLB fronts CC VMs with a Public IP. disable_outbound_snat=true
+#    preserves the original client IP so CC can perform DNAT correctly.
+#    enable_floating_ip=true ensures CC receives the PLB frontend IP directly.
+#
+#    Traffic flow: Internet → PLB → CC VMs → ILB → Workloads
+#
+#    CC-side configuration required (outside Terraform):
+#      • DNAT rule: PLB frontend IP → workload destination
+#      • SNAT rule: use ILB frontend IP as source for return traffic
 ################################################################################
-# Azure Load Balancer Module variables
 module "cc_lb" {
   source                = "../../modules/terraform-zscc-public-lb-azure"
   name_prefix           = var.name_prefix
@@ -219,4 +226,35 @@ module "cc_lb" {
   health_check_interval = var.health_check_interval
   probe_threshold       = var.probe_threshold
   number_of_probes      = var.number_of_probes
+
+  # gateway_load_balancer_frontend_ip_configuration_id is intentionally omitted
+  # (null = standalone PLB, not chained to a GWLB)
+}
+
+
+################################################################################
+# 8. Create downstream Internal Load Balancer (ILB) for PLB → CC → ILB topology.
+#    The ILB sits on the CC service subnet with floating IP enabled so CC VMs
+#    receive the original PLB frontend IP for DNAT processing.
+#
+#    Workload route tables should point their default route (0.0.0.0/0) to the
+#    ILB frontend IP (output: ilb_ip) so that return traffic from workloads is
+#    steered back through the CC VMs for inspection before leaving the VNet.
+################################################################################
+module "cc_ilb" {
+  source         = "../../modules/terraform-zscc-lb-azure"
+  name_prefix    = var.name_prefix
+  resource_tag   = random_string.suffix.result
+  global_tags    = local.global_tags
+  resource_group = module.network.resource_group_name
+  location       = var.arm_location
+  subnet_id      = module.network.cc_subnet_ids[0]
+
+  http_probe_port       = var.http_probe_port
+  health_check_interval = var.health_check_interval
+  probe_threshold       = var.probe_threshold
+  number_of_probes      = var.number_of_probes
+  load_distribution     = var.load_distribution
+  zones_enabled         = var.zones_enabled
+  zones                 = var.zones
 }

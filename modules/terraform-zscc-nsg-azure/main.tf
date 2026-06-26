@@ -141,6 +141,12 @@ resource "azurerm_network_security_group" "cc_service_nsg" {
 # Create NSG specifically for the service interface in Gateway Load Balancer
 # (GWLB) deployments. Naming follows the cc_*_nsg pattern of the mgmt and
 # service NSGs above.
+#
+# Security note: VXLAN traffic is sourced exclusively from the Azure GWLB data
+# plane (service tag "AzureLoadBalancer"). Allowing UDP from "*" would permit
+# arbitrary UDP from the internet. The two rules below restrict inbound VXLAN
+# to the AzureLoadBalancer service tag and only to the configured VXLAN port
+# range (vxlan_internal_port – vxlan_external_port), then deny everything else.
 ################################################################################
 resource "azurerm_network_security_group" "cc_service_gwlb_nsg" {
   count               = var.gwlb_enabled ? 1 : 0
@@ -148,14 +154,33 @@ resource "azurerm_network_security_group" "cc_service_gwlb_nsg" {
   location            = var.location
   resource_group_name = var.resource_group
 
+  # Allow VXLAN UDP from the Azure GWLB data plane only.
+  # Source is restricted to the AzureLoadBalancer service tag so that arbitrary
+  # internet hosts cannot send UDP to the CC service NIC.
+  # Destination port range covers both the internal and external VXLAN ports
+  # (e.g. 10800-10801 by default). Adjust var.vxlan_internal_port /
+  # var.vxlan_external_port if you use non-default ports.
   security_rule {
-    name                       = "VXLAN-Allow"
+    name                       = "VXLAN-Allow-GWLB"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Udp"
     source_port_range          = "*"
-    destination_port_range     = "*" # Allow all UDP inbound; GWLB VXLAN ports are configurable
+    destination_port_range     = "${var.vxlan_internal_port}-${var.vxlan_external_port}"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "*"
+  }
+
+  # Deny all other inbound UDP/TCP that was not matched above.
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }

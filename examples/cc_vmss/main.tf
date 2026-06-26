@@ -131,7 +131,7 @@ module "cc_vmss" {
   service_nsg_id                 = module.cc_nsg.service_nsg_id[0]
   accelerated_networking_enabled = var.accelerated_networking_enabled
   encryption_at_host_enabled     = var.encryption_at_host_enabled
-  public_lb_deployed                  = var.public_lb_deploy
+  public_lb_deployed             = var.public_lb_deploy
 
   vmss_default_ccs    = var.vmss_default_ccs
   vmss_min_ccs        = var.vmss_min_ccs

@@ -34,6 +34,10 @@ ${join("\n", module.cc_vm.service_ip)}
 Public Load Balancer Frontend IP: 
 ${module.cc_lb.lb_ip}
 
+Internal Load Balancer (ILB) Frontend IP:
+${module.cc_ilb.lb_ip}
+(Set workload route tables: 0.0.0.0/0 → ILB IP above for return traffic through CC)
+
 
 WORKLOAD Details/Commands:
 SSH to WORKLOAD

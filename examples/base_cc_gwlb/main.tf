@@ -182,6 +182,8 @@ module "cc_nsg" {
   support_access_enabled = var.support_access_enabled
   zssupport_server       = var.zssupport_server
   gwlb_enabled           = true
+  vxlan_internal_port    = var.vxlan_internal_port
+  vxlan_external_port    = var.vxlan_external_port
 }
 
 

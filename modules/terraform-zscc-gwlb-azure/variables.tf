@@ -32,25 +32,55 @@ variable "subnet_id" {
 }
 variable "vxlan_external_port" {
   type        = number
-  description = "VXLAN external UDP port for traffic encapsulation"
+  description = <<-EOT
+    UDP port used for the GWLB external (consumer-side) VXLAN tunnel interface.
+    Default: 10801.
+
+    ⚠️  IMMUTABLE after first apply — Azure does not allow changing GWLB tunnel
+    interface ports on an existing resource. Changing this value requires
+    destroying and recreating the GWLB and all associated CC NIC associations,
+    which causes a traffic disruption. Set this value once and do not change it.
+  EOT
   default     = 10801
 }
 
 variable "vxlan_internal_port" {
   type        = number
-  description = "VXLAN internal UDP port for backend traffic forwarding"
+  description = <<-EOT
+    UDP port used for the GWLB internal (backend/CC-side) VXLAN tunnel interface.
+    Default: 10800.
+
+    ⚠️  IMMUTABLE after first apply — Azure does not allow changing GWLB tunnel
+    interface ports on an existing resource. Changing this value requires
+    destroying and recreating the GWLB and all associated CC NIC associations,
+    which causes a traffic disruption. Set this value once and do not change it.
+  EOT
   default     = 10800
 }
 
 variable "vxlan_external_vni" {
   type        = number
-  description = "VXLAN external VNI for overlay traffic"
+  description = <<-EOT
+    VXLAN Network Identifier (VNI) for the external (consumer-side) tunnel interface.
+    Default: 801.
+
+    ⚠️  IMMUTABLE after first apply — changing the VNI requires destroying and
+    recreating the GWLB backend pool tunnel interfaces, causing a traffic disruption.
+    Set this value once and do not change it.
+  EOT
   default     = 801
 }
 
 variable "vxlan_internal_vni" {
   type        = number
-  description = "VXLAN internal VNI for decapsulated traffic"
+  description = <<-EOT
+    VXLAN Network Identifier (VNI) for the internal (backend/CC-side) tunnel interface.
+    Default: 800.
+
+    ⚠️  IMMUTABLE after first apply — changing the VNI requires destroying and
+    recreating the GWLB backend pool tunnel interfaces, causing a traffic disruption.
+    Set this value once and do not change it.
+  EOT
   default     = 800
 }
 

@@ -1,11 +1,65 @@
-# Zscaler "Base_cc_lb" deployment type
+# Zscaler "base_cc_public_lb" deployment type
 
-This deployment type is intended for greenfield/pov/lab purposes. It will deploy a fully functioning sandbox environment in a new Resource Group/VNet with test workload VMs. Full set of resources provisioned listed below, but this will effectively create all network infrastructure dependencies for an Azure environment. Everything from "Base" deployment type (Creates 1 new Resource Group; 1 VNet with 1 public subnet and 1 private/workload subnet; 1 test workload in the private subnet; 1 Bastion Host in the public subnet assigned a Public IP; and generates local key pair .pem file for ssh access).<br>
+This deployment type is intended for **greenfield / PoV / lab** purposes. It deploys a fully functioning sandbox environment in a new Resource Group and VNet with test workload VMs, implementing the **routed-mode PLB → CC → ILB ingress topology** for ZIA inspection.
 
-Additionally: Creates 2 Cloud Connector private subnets associated to a 2 NAT Gateways; 2 Cloud Connector VMs; Standard Azure Load Balancer; and workload private subnet UDR routing to the Load Balancer Frontend IP.
+## Topology
+
+```
+Internet
+    │
+    ▼
+Public Load Balancer (PLB)
+  • Standard SKU, Public IP frontend
+  • disable_outbound_snat = true  ← preserves client IP for CC DNAT
+  • enable_floating_ip = true     ← CC receives PLB frontend IP directly
+    │
+    ▼
+CC VM Service NICs  (backend pool of PLB)
+  • CC performs DNAT: PLB frontend IP → workload destination
+  • CC performs SNAT: uses ILB frontend IP as source for return path
+    │
+    ▼
+Internal Load Balancer (ILB)
+  • Private IP frontend on CC subnet
+  • Protocol = All, ports 0/0, enable_floating_ip = true
+  • Workload UDR: 0.0.0.0/0 → ILB frontend IP
+    │
+    ▼
+Workload VMs (private subnet)
+```
+
+### Key design points
+
+| Component | Setting | Reason |
+|-----------|---------|--------|
+| PLB | `disable_outbound_snat = true` | Preserves original client IP so CC can DNAT correctly |
+| PLB | `enable_floating_ip = true` | CC receives the PLB frontend IP directly for DNAT |
+| ILB | `enable_floating_ip = true` | CC uses ILB frontend IP as SNAT source for return traffic |
+| ILB | Protocol = All, ports 0/0 | HA ports rule — passes all traffic to CC |
+
+### CC-side configuration required (outside Terraform)
+
+1. **DNAT rule** — translate the PLB frontend public IP to the workload private IP/port.
+2. **SNAT rule** — use the ILB frontend private IP (`output: testbedconfig → ILB IP`) as the source address for traffic forwarded to workloads.
+3. **Workload route tables** — a `0.0.0.0/0` UDR pointing to the ILB frontend IP is automatically created by the network module so workload return traffic traverses the CC.
+
+> **Brownfield / BYO VNet variant:** See [`cc_public_lb`](../cc_public_lb) for a version that deploys into an existing VNet.
+
+## Resources created
+
+- 1 Resource Group, 1 VNet
+- 1 public subnet (Bastion), 1 workload subnet, CC subnet(s) with NAT Gateway(s)
+- 1 Bastion Host (public IP)
+- Test workload VMs
+- CC VMs (default: 2)
+- **Public Load Balancer** (PLB) with public IP frontend
+- **Internal Load Balancer** (ILB) on CC subnet — workload UDR points here
+- NSGs, Managed Identity reference
 
 ## Caveats/Considerations
+
 - WSL2 DNS bug: If you are trying to run these Azure terraform deployments specifically from a Windows WSL2 instance like Ubuntu and receive an error containing a message similar to this "dial tcp: lookup management.azure.com on 172.21.240.1:53: cannot unmarshal DNS message" please refer here for a WSL2 resolv.conf fix. https://github.com/microsoft/WSL/issues/5420#issuecomment-646479747.
+- **Single subscription scope** — cross-subscription deployments are supported via `managed_identity_subscription_id` but cross-tenant scenarios are out of scope.
 
 ## How to deploy:
 
@@ -13,16 +67,16 @@ Additionally: Creates 2 Cloud Connector private subnets associated to a 2 NAT Ga
 From the examples directory, run the zsec bash script that walks to all required inputs.
 - ./zsec up
 - enter "greenfield"
-- enter "base_cc_lb"
+- enter "base_cc_public_lb"
 - follow the remainder of the authentication and configuration input prompts.
 - script will detect client operating system and download/run a specific version of terraform in a temporary bin directory
-- inputs will be validated and terraform init/apply will automatically exectute.
+- inputs will be validated and terraform init/apply will automatically execute.
 - verify all resources that will be created/modified and enter "yes" to confirm
 
 ### Option 2 (manual):
-Modify/populate any required variable input values in base_cc_lb/terraform.tfvars file and save.
+Modify/populate any required variable input values in base_cc_public_lb/terraform.tfvars file and save.
 
-From base_cc_lb directory execute:
+From base_cc_public_lb directory execute:
 - terraform init
 - terraform apply
 
@@ -33,7 +87,7 @@ From the examples directory, run the zsec bash script that walks to all required
 - ./zsec destroy
 
 ### Option 2 (manual):
-From base_cc_lb directory execute:
+From base_cc_public_lb directory execute:
 - terraform destroy
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

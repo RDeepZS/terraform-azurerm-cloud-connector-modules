@@ -199,6 +199,8 @@ module "cc_nsg" {
   global_tags            = local.global_tags
   support_access_enabled = var.support_access_enabled
   gwlb_enabled           = true
+  vxlan_internal_port    = var.vxlan_internal_port
+  vxlan_external_port    = var.vxlan_external_port
 }
 
 
