@@ -35,7 +35,7 @@ Our Deployment scripts are leveraging Terraform v1.5.7 which includes full binar
     - Client Secret Value
 3. Azure Region (e.g. westus2) where Cloud Connector resources are to be deployed
 4. User-created Azure Managed Identity for Cloud Connector VMs.
-5. **(VMSS deployments only)** A second, separate User-Assigned Managed Identity for the Function App autoscaler. **Do NOT** reuse the CC VM identity from step 4.
+5. **(VMSS deployments only)** A second User-Assigned Managed Identity for the Function App autoscaler.
 6. Azure Vault URL with Zscaler Cloud Connector Credentials (E.g. [https://zscaler-cc-demo.vault.azure.net](https://zscaler-cc-demo.vault.azure.net/)) Add an access policy to the above Key Vault as below
     - Secret Permissions: Get, List
     - Select Principal: The CC VM Managed Identity created in step 4
