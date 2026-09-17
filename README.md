@@ -18,7 +18,7 @@ Use this repository to create the deployment resources required to deploy and op
 
 ## **Prerequisites**
 
-Our Deployment scripts are leveraging Terraform v1.1.9 which includes full binary and provider support for macOS M1 chips, but any Terraform version 0.13.7 should be generally supported.
+Our Deployment scripts are leveraging Terraform v1.5.7 which includes full binary and provider support for macOS M1 chips, but any Terraform version between 0.13.7 and 2.0.0 should be generally supported.
 
 - provider registry.terraform.io/hashicorp/azurerm v3.116.x (minimum 3.108.x)
 - provider registry.terraform.io/hashicorp/random v3.3.x
@@ -34,26 +34,24 @@ Our Deployment scripts are leveraging Terraform v1.1.9 which includes full binar
     - Directory (tenant) ID
     - Client Secret Value
 3. Azure Region (e.g. westus2) where Cloud Connector resources are to be deployed
-4. User-created Azure Managed Identity with a **least-privilege** Role Assignment. **Recommended**: create a Custom Role that grants only `Microsoft.Network/networkInterfaces/read` and assign it at **Resource Group scope** (the Resource Group where the Cloud Connector VMs will be deployed). **Do NOT** use the built-in `Network Contributor` role at Subscription scope — it grants write access to every NIC, NSG, route table, load balancer, and VNet peering across the entire subscription, well beyond what Cloud Connector needs at runtime. If your environment cannot create Custom Roles, `Network Contributor` scoped to only the single Cloud Connector Resource Group is an acceptable (still over-privileged) fallback.
-
-    > **VMSS deployments (`vmss_enabled = true`) — TF-AZ-09:** create a **second, separate** User-Assigned Managed Identity for the Function App autoscaler. Do **NOT** reuse the CC VM identity. The Function App requires `Microsoft.Compute/virtualMachineScaleSets/write` + `delete/action` (to add and remove CC instances) and `Key Vault Secrets User` (to read Zscaler provisioning secrets) — permissions Cloud Connector VMs themselves do not need. Sharing one identity means a compromised CC VM inherits the autoscaler's ability to delete sibling CCs and read all vault secrets. Set `function_app_managed_identity_name` and `function_app_managed_identity_rg` in your `terraform.tfvars` accordingly; Terraform plan will fail with a TF-AZ-09 error if empty or equal to the CC identity.
-5. Azure Vault URL with Zscaler Cloud Connector Credentials (E.g. [https://zscaler-cc-demo.vault.azure.net](https://zscaler-cc-demo.vault.azure.net/)) Add an access policy to the above Key Vault as below
+4. User-created Azure Managed Identity for Cloud Connector VMs. Create a Custom Role that grants only `Microsoft.Network/networkInterfaces/read` and assign it at **Resource Group scope** (the Resource Group where CC VMs are deployed). **Do NOT** use the built-in `Network Contributor` role at Subscription scope — it grants write access to every NIC, NSG, route table, load balancer, and VNet peering across the entire subscription, well beyond what Cloud Connector needs at runtime. If your environment cannot create Custom Roles, `Network Contributor` scoped to only the CC Resource Group is an acceptable fallback.
+5. **(VMSS deployments only)** A second, separate User-Assigned Managed Identity for the Function App autoscaler. **Do NOT** reuse the CC VM identity from step 4. Set `function_app_managed_identity_name` and `function_app_managed_identity_rg` in your `terraform.tfvars`. Terraform plan will fail if these are empty or set to the same identity as the CC VM.
+6. Azure Vault URL with Zscaler Cloud Connector Credentials (E.g. [https://zscaler-cc-demo.vault.azure.net](https://zscaler-cc-demo.vault.azure.net/)) Add an access policy to the above Key Vault as below
     - Secret Permissions: Get, List
-    - Select Principal: The Managed Identity created in the above step
-
-    > **create_function_app_role opt-in — TF-AZ-09:** if you enable `create_function_app_role`, the module also assigns the built-in `Key Vault Secrets User` role to the Function App identity. This is an **Azure RBAC** assignment and only takes effect if the Key Vault has `enable_rbac_authorization = true`. Vaults using the legacy Access Policy model shown above will need the access policy entry in addition to (or instead of) the RBAC assignment.
-6. Accept the Cloud Connector VM image terms for the Subscription(s) where Cloud Connector is to be deployed. This can be done via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal in the correct subscription where Cloud Connector is being deployed Run Command: `az vm image terms accept --urn zscaler1579058425289:zia_cloud_connector:zs_ser_gen1_cc_01:latest`
+    - Select Principal: The CC VM Managed Identity created in step 4
+    > If you enable `create_function_app_role = true`, also grant the Function App identity (step 5) access to this Key Vault. Note: this uses Azure RBAC and only takes effect if the Key Vault has `enable_rbac_authorization = true`. Vaults using the legacy Access Policy model will need the access policy entry added manually.
+7. Accept the Cloud Connector VM image terms for the Subscription(s) where Cloud Connector is to be deployed. This can be done via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal in the correct subscription where Cloud Connector is being deployed Run Command: `az vm image terms accept --urn zscaler1579058425289:zia_cloud_connector:zs_ser_gen1_cc_01:latest`
 
 ### Terraform client requirements
-7. If executing Terraform via the "zsec" wrapper bash script, it is advised that you run from a MacOS or Linux workstation. Minimum installed application requirements to successfully from the script are:
+8. If executing Terraform via the "zsec" wrapper bash script, it is advised that you run from a MacOS or Linux workstation. Minimum installed application requirements to successfully from the script are:
     - bash | curl | unzip | rm | cp | find | grep | sed | dig | jq (for vmss manual_sync script)
 
 <p>These can all be installed via your distribution app installer. ie: sudo apt install bash curl unzip</p>
 
 ### **Zscaler requirements**
 
-8. A valid Zscaler Cloud Connector provisioning URL generated. This is done via the Cloud Connector portal (E.g. connector..net/login)
-9. Zscaler Cloud Connector Credentials (api key, username, password) are stored in Azure Key Vault from step 5.
+9. A valid Zscaler Cloud Connector provisioning URL generated. This is done via the Cloud Connector portal (E.g. connector..net/login)
+10. Zscaler Cloud Connector Credentials (api key, username, password) are stored in Azure Key Vault from step 6.
 
 ### *Host Disk Encryption*
 To enable host encryption. You **must** subscribe to the feature on your azure account. Official Microsoft Documentation on how to enable this feature can be found [here](https://learn.microsoft.com/en-us/azure/virtual-machines/disks-enable-host-based-encryption-portal?tabs=azure-cli#prerequisites)

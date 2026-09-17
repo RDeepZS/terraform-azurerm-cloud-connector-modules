@@ -6,5 +6,5 @@ terraform {
       configuration_aliases = [azurerm.managed_identity_sub]
     }
   }
-  required_version = ">= 0.13.7, < 2.0.0"
+  required_version = ">= 1.4.0, < 2.0.0"
 }

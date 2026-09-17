@@ -27,11 +27,11 @@ data "azurerm_user_assigned_identity" "function_app_identity_selected" {
   lifecycle {
     precondition {
       condition     = var.function_app_managed_identity_name != "" && var.function_app_managed_identity_rg != ""
-      error_message = "TF-AZ-09: function_app_managed_identity_name/rg must be set to a distinct identity from cc_vm_managed_identity_name/rg when vmss_enabled = true."
+      error_message = "function_app_managed_identity_name/rg must be set to a distinct identity from cc_vm_managed_identity_name/rg when vmss_enabled = true."
     }
     precondition {
       condition     = var.function_app_managed_identity_name != var.cc_vm_managed_identity_name || var.function_app_managed_identity_rg != var.cc_vm_managed_identity_rg
-      error_message = "TF-AZ-09: function_app_managed_identity_name/rg must differ from cc_vm_managed_identity_name/rg."
+      error_message = "function_app_managed_identity_name/rg must differ from cc_vm_managed_identity_name/rg."
     }
   }
 }
@@ -51,11 +51,11 @@ data "azurerm_resource_group" "fa_cc_rg" {
   lifecycle {
     precondition {
       condition     = var.vmss_enabled
-      error_message = "TF-AZ-09: create_function_app_role requires vmss_enabled = true."
+      error_message = "create_function_app_role requires vmss_enabled = true."
     }
     precondition {
       condition     = var.cc_resource_group_name != ""
-      error_message = "TF-AZ-09: create_function_app_role requires cc_resource_group_name to be set."
+      error_message = "create_function_app_role requires cc_resource_group_name to be set."
     }
   }
 }
@@ -64,7 +64,7 @@ resource "azurerm_role_definition" "function_app_vmss_ops" {
   count       = var.create_function_app_role ? 1 : 0
   name        = coalesce(var.function_app_role_name, "${var.function_app_managed_identity_name}-vmss-ops")
   scope       = data.azurerm_subscription.fa_current[0].id
-  description = "Least-privilege VMSS ops role for CC Function App autoscaler (TF-AZ-09)."
+  description = "Least-privilege VMSS ops role for CC Function App autoscaler."
 
   permissions {
     actions = [
@@ -88,7 +88,7 @@ resource "azurerm_role_assignment" "function_app_vmss_ops" {
   scope              = data.azurerm_resource_group.fa_cc_rg[0].id
   role_definition_id = azurerm_role_definition.function_app_vmss_ops[0].role_definition_resource_id
   principal_id       = data.azurerm_user_assigned_identity.function_app_identity_selected[0].principal_id
-  description        = "TF-AZ-09 VMSS ops assignment for CC Function App autoscaler."
+  description        = "VMSS ops assignment for CC Function App autoscaler."
 }
 
 # Built-in 'Key Vault Secrets User' role, scoped to the CC RG, so the
@@ -102,7 +102,7 @@ resource "azurerm_role_assignment" "function_app_kv_secrets" {
   scope                = data.azurerm_resource_group.fa_cc_rg[0].id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = data.azurerm_user_assigned_identity.function_app_identity_selected[0].principal_id
-  description          = "TF-AZ-09 Key Vault secret-read assignment for CC Function App autoscaler."
+  description          = "Key Vault secret-read assignment for CC Function App autoscaler."
 }
 
 ################################################################################
@@ -122,7 +122,7 @@ resource "azurerm_role_definition" "cc_nic_read" {
   count       = var.create_cc_read_role ? 1 : 0
   name        = coalesce(var.cc_read_role_name, "${var.cc_vm_managed_identity_name}-nic-read")
   scope       = data.azurerm_subscription.current[0].id
-  description = "Least-privilege role for CC managed identity: networkInterfaces/read only (TF-AZ-10)."
+  description = "Least-privilege role for CC managed identity: networkInterfaces/read only."
 
   permissions {
     actions          = ["Microsoft.Network/networkInterfaces/read"]
@@ -139,5 +139,5 @@ resource "azurerm_role_assignment" "cc_nic_read" {
   scope              = data.azurerm_resource_group.cc_rg[0].id
   role_definition_id = azurerm_role_definition.cc_nic_read[0].role_definition_resource_id
   principal_id       = data.azurerm_user_assigned_identity.selected.principal_id
-  description        = "TF-AZ-10 least-privilege assignment for CC managed identity."
+  description        = "Least-privilege assignment for CC managed identity."
 }

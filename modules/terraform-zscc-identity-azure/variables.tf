@@ -32,7 +32,7 @@ variable "vmss_enabled" {
 # roleAssignments/write at Subscription scope.
 variable "create_cc_read_role" {
   type        = bool
-  description = "TF-AZ-10 (opt-in): create and assign a least-privilege Custom Role (networkInterfaces/read only) to the CC managed identity at the CC Resource Group scope."
+  description = "Opt-in: create and assign a least-privilege Custom Role (networkInterfaces/read only) to the CC managed identity at the CC Resource Group scope."
   default     = false
 }
 
@@ -42,7 +42,7 @@ variable "create_cc_read_role" {
 # roleDefinitions/write and roleAssignments/write at Subscription scope.
 variable "create_function_app_role" {
   type        = bool
-  description = "TF-AZ-09 (opt-in): create a least-privilege VMSS-ops Custom Role and assign it, plus 'Key Vault Secrets User', to the Function App identity at the CC Resource Group scope. Requires vmss_enabled = true; Key Vault assignment requires enable_rbac_authorization = true on the vault."
+  description = "Opt-in: create a least-privilege VMSS-ops Custom Role and assign it, plus 'Key Vault Secrets User', to the Function App identity at the CC Resource Group scope. Requires vmss_enabled = true; Key Vault assignment requires enable_rbac_authorization = true on the vault."
   default     = false
 }
 

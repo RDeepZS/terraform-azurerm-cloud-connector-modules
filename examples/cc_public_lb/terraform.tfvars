@@ -4,7 +4,7 @@
 #cc_vm_managed_identity_name  = ""
 #cc_vm_managed_identity_rg    = ""
 
-## TF-AZ-10 (opt-in): create and assign a least-privilege Custom Role for the CC managed
+## Opt-in: create and assign a least-privilege Custom Role for the CC managed
 ## identity instead of relying on an out-of-band role assignment. See modules/terraform-zscc-identity-azure.
 #create_cc_read_role          = true
 #cc_read_role_name            = "cc-nic-read"

@@ -206,12 +206,12 @@
 #existing_storage_account_rg = "<storage-account-resource-group"
 
 
-#### REQUIRED for VMSS deployments (TF-AZ-09): Function App autoscaler managed identity.
+#### REQUIRED for VMSS deployments: Function App autoscaler managed identity.
 #### This MUST reference a DIFFERENT User-Assigned Managed Identity than cc_vm_managed_identity_*
 #### above. The Function App needs VMSS Compute write/delete and Key Vault secret-read; the CC
 #### VMs do not. Sharing one identity means a compromised CC VM inherits the autoscaler's power
 #### to delete sibling CCs and read every Zscaler provisioning secret.
-#### Terraform plan will FAIL with a TF-AZ-09 error if these are empty or match the CC identity.
+#### Terraform plan will FAIL if these are empty or match the CC identity.
 
 # Name of the User-Assigned Managed Identity to attach to the Function App. E.g. function_app_managed_identity
 function_app_managed_identity_name = ""
@@ -219,7 +219,7 @@ function_app_managed_identity_name = ""
 # Resource Group of the Function App Managed Identity. E.g. function_rg_1
 function_app_managed_identity_rg = ""
 
-## TF-AZ-09/TF-AZ-10 (opt-in): create and assign least-privilege Custom Roles for the CC
+## Opt-in: create and assign least-privilege Custom Roles for the CC
 ## and/or Function App managed identities instead of relying on out-of-band role assignments.
 ## See modules/terraform-zscc-identity-azure. Key Vault Secrets User is Azure RBAC and only
 ## takes effect if the target vault has enable_rbac_authorization = true.
