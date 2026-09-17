@@ -158,7 +158,7 @@ variable "byo_subnet_names" {
 
   validation {
     condition     = var.byo_subnet_names == null ? true : length(var.byo_subnet_names) <= 10
-    error_message = "byo_subnet_names supports at most 10 subnets."
+    error_message = "The byo_subnet_names list supports at most 10 subnets."
   }
 }
 

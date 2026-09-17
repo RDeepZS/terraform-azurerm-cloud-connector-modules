@@ -228,30 +228,18 @@ resource "azurerm_subnet_route_table_association" "private_dns_rt_association" {
 
 
 ################################################################################
-# BYO (Bring-Your-Own) Coherency Preconditions
+# BYO (Bring-Your-Own) Coherency Assertions
 ################################################################################
-# Guard against incoherent Bring-Your-Own combinations up front with clear,
-# actionable errors instead of failing deep inside the azurerm data-source
-# lookups. BYO resources are hierarchical:
-#   byo_subnets requires byo_vnet requires byo_rg
-# A null_resource is used (rather than a data-source lifecycle precondition)
-# because it is always created regardless of the conditional counts elsewhere
-# in this module, so the assertions are guaranteed to evaluate on every plan.
-resource "null_resource" "byo_preconditions" {
-  lifecycle {
-    precondition {
-      condition     = !(var.byo_vnet && var.byo_rg == false)
-      error_message = "Invalid BYO combination: byo_vnet=true requires byo_rg=true. An existing VNet must reside in an existing (bring-your-own) Resource Group. Set byo_rg=true and provide byo_rg_name, or set byo_vnet=false."
-    }
+# Reject incoherent BYO combinations (byo_subnets -> byo_vnet -> byo_rg) at
+# plan time. Written for the pinned Terraform 1.1.9 (no precondition/check).
+resource "null_resource" "assert_byo_vnet_requires_rg" {
+  count = !(var.byo_vnet && var.byo_rg == false) ? 0 : tonumber("Invalid BYO combination: byo_vnet=true requires byo_rg=true. An existing VNet must reside in an existing (bring-your-own) Resource Group. Set byo_rg=true and provide byo_rg_name, or set byo_vnet=false.")
+}
 
-    precondition {
-      condition     = !(var.byo_subnets && var.byo_vnet == false)
-      error_message = "Invalid BYO combination: byo_subnets=true requires byo_vnet=true. Existing subnets must reside in an existing (bring-your-own) VNet. Set byo_vnet=true and provide byo_vnet_name/byo_vnet_subnets_rg_name, or set byo_subnets=false."
-    }
+resource "null_resource" "assert_byo_subnets_requires_vnet" {
+  count = !(var.byo_subnets && var.byo_vnet == false) ? 0 : tonumber("Invalid BYO combination: byo_subnets=true requires byo_vnet=true. Existing subnets must reside in an existing (bring-your-own) VNet. Set byo_vnet=true and provide byo_vnet_name/byo_vnet_subnets_rg_name, or set byo_subnets=false.")
+}
 
-    precondition {
-      condition     = !(var.byo_subnets && (var.byo_subnet_names == null || length(var.byo_subnet_names) == 0))
-      error_message = "byo_subnets=true requires byo_subnet_names to contain at least one existing subnet name."
-    }
-  }
+resource "null_resource" "assert_byo_subnet_names_present" {
+  count = !(var.byo_subnets && (var.byo_subnet_names == null || length(var.byo_subnet_names) == 0)) ? 0 : tonumber("Invalid BYO combination: byo_subnets=true requires byo_subnet_names to contain at least one existing subnet name.")
 }

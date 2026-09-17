@@ -13,7 +13,7 @@ byo_rg  ->  byo_vnet  ->  byo_subnets
 - `byo_vnet = true` requires `byo_rg = true` (an existing VNet lives in an existing Resource Group).
 - `byo_subnets = true` requires `byo_vnet = true` (existing subnets live in an existing VNet).
 
-Incoherent combinations (e.g. `byo_subnets = true` with `byo_vnet = false`) are rejected at plan time by module precondition checks with an actionable error message. The `zsec` interactive wrapper enforces the same hierarchy by only prompting for a child resource once its parent has been selected.
+Incoherent combinations (e.g. `byo_subnets = true` with `byo_vnet = false`) are rejected at plan time by module coherency assertion checks with an actionable error message. The `zsec` interactive wrapper enforces the same hierarchy by only prompting for a child resource once its parent has been selected.
 
 ### Cloud Connector Subnet role and order
 
