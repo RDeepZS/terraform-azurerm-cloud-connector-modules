@@ -34,7 +34,7 @@ Our Deployment scripts are leveraging Terraform v1.5.7 which includes full binar
     - Directory (tenant) ID
     - Client Secret Value
 3. Azure Region (e.g. westus2) where Cloud Connector resources are to be deployed
-4. User-created Azure Managed Identity for Cloud Connector VMs. Create a Custom Role that grants only `Microsoft.Network/networkInterfaces/read` and assign it at **Resource Group scope** (the Resource Group where CC VMs are deployed). **Do NOT** use the built-in `Network Contributor` role at Subscription scope — it grants write access to every NIC, NSG, route table, load balancer, and VNet peering across the entire subscription, well beyond what Cloud Connector needs at runtime. If your environment cannot create Custom Roles, `Network Contributor` scoped to only the CC Resource Group is an acceptable fallback.
+4. User-created Azure Managed Identity for Cloud Connector VMs. Set `cc_vm_managed_identity_name` and `cc_vm_managed_identity_rg` in your `terraform.tfvars`.
 5. **(VMSS deployments only)** A second, separate User-Assigned Managed Identity for the Function App autoscaler. **Do NOT** reuse the CC VM identity from step 4. Set `function_app_managed_identity_name` and `function_app_managed_identity_rg` in your `terraform.tfvars`. Terraform plan will fail if these are empty or set to the same identity as the CC VM.
 6. Azure Vault URL with Zscaler Cloud Connector Credentials (E.g. [https://zscaler-cc-demo.vault.azure.net](https://zscaler-cc-demo.vault.azure.net/)) Add an access policy to the above Key Vault as below
     - Secret Permissions: Get, List
