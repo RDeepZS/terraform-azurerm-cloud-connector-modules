@@ -39,7 +39,6 @@ Our Deployment scripts are leveraging Terraform v1.5.7 which includes full binar
 6. Azure Vault URL with Zscaler Cloud Connector Credentials (E.g. [https://zscaler-cc-demo.vault.azure.net](https://zscaler-cc-demo.vault.azure.net/)) Add an access policy to the above Key Vault as below
     - Secret Permissions: Get, List
     - Select Principal: The CC VM Managed Identity created in step 4
-    > If you enable `create_function_app_role = true`, also grant the Function App identity (step 5) access to this Key Vault. Note: this uses Azure RBAC and only takes effect if the Key Vault has `enable_rbac_authorization = true`. Vaults using the legacy Access Policy model will need the access policy entry added manually.
 7. Accept the Cloud Connector VM image terms for the Subscription(s) where Cloud Connector is to be deployed. This can be done via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal in the correct subscription where Cloud Connector is being deployed Run Command: `az vm image terms accept --urn zscaler1579058425289:zia_cloud_connector:zs_ser_gen1_cc_01:latest`
 
 ### Terraform client requirements
