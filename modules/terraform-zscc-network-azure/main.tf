@@ -241,5 +241,5 @@ resource "null_resource" "assert_byo_subnets_requires_vnet" {
 }
 
 resource "null_resource" "assert_byo_subnet_names_present" {
-  count = !(var.byo_subnets && (var.byo_subnet_names == null || length(var.byo_subnet_names) == 0)) ? 0 : tonumber("Invalid BYO combination: byo_subnets=true requires byo_subnet_names to contain at least one existing subnet name.")
+  count = !(var.byo_subnets && (var.byo_subnet_names == null ? true : length(var.byo_subnet_names) == 0)) ? 0 : tonumber("Invalid BYO combination: byo_subnets=true requires byo_subnet_names to contain at least one existing subnet name.")
 }
